@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <main className="text-white">
 
-      {/*HERO (animação imediata) */}
+      {/*INTRO*/}
       <section className="min-h-screen flex flex-col justify-center items-center text-center px-6">
 
         <FadeItem direction="down" delay={0}>
@@ -150,7 +150,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA FINAL */}
+      {/* CTA FINAL  */}
       <section className="py-20 px-6 text-center bg-black/40">
         <FadeIn>
           <h2 className="text-3xl md:text-4xl font-semibold mb-6">

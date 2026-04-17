@@ -34,9 +34,9 @@ export default function ProjectsPage() {
   ];
 
   return (
-    <main className="min-h-screen text-white px-6 py-40 max-w-6xl mx-auto">
+    <main className="min-h-screen text-white px-6 pt-65 pb-[90px] max-w-6xl mx-auto">
 
-      {/* 🔥 HERO */}
+      {/*INTRO*/}
       <FadeIn>
         <section className="text-center mb-20">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -48,14 +48,16 @@ export default function ProjectsPage() {
         </section>
       </FadeIn>
 
-      {/* 🧭 CATEGORIAS */}
+      {/*CATEGORIAS */}
+      <FadeIn direction="left" delay={0.4}>
       <div className="grid md:grid-cols-3 gap-6 mb-20">
         <CategoryCard title="Frontend" link="/projects/frontend" />
         <CategoryCard title="Backend" link="/projects/backend" />
         <CategoryCard title="Fullstack" link="/projects/fullstack" />
       </div>
+      </FadeIn>
 
-      {/* ⭐ DESTAQUES */}
+      {/*DESTAQUES*/}
       <FadeIn>
         <h2 className="text-2xl md:text-3xl font-semibold mb-10 text-center">
           Destaques Recentes
@@ -73,7 +75,7 @@ export default function ProjectsPage() {
         ))}
       </div>
 
-      {/* 🧩 MODAL */}
+      {/*MODAL */}
       <AnimatePresence>
         {selectedProject && (
           <ProjectModal
@@ -85,8 +87,6 @@ export default function ProjectsPage() {
     </main>
   );
 }
-
-//////////////////////////////////////////////////////
 
 function ProjectCard({ project, onClick }) {
   return (
@@ -122,8 +122,6 @@ function ProjectCard({ project, onClick }) {
     </div>
   );
 }
-
-//////////////////////////////////////////////////////
 
 function ProjectModal({ project, onClose }) {
   return (
@@ -197,8 +195,6 @@ function ProjectModal({ project, onClose }) {
     </motion.div>
   );
 }
-
-//////////////////////////////////////////////////////
 
 function CategoryCard({ title, link }) {
   return (

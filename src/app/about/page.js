@@ -6,8 +6,8 @@ export default function About() {
   return (
     <main className="text-white px-6">
 
-      {/* 👤 INTRO */}
-      <section className="min-h-[80vh] flex flex-col justify-center items-center text-center max-w-3xl mx-auto">
+      {/*INTRO*/}
+      <section className="min-h-[90vh] flex flex-col justify-center items-center text-center max-w-3xl mx-auto">
         <FadeIn>
           <h1 className="text-4xl md:text-5xl font-bold mb-6">
             Sobre mim
@@ -22,7 +22,7 @@ export default function About() {
         </FadeIn>
       </section>
 
-      {/* 📖 HISTÓRIA */}
+      {/*HISTÓRIA */}
       <section className="py-20 max-w-4xl mx-auto">
         <FadeIn>
           <h2 className="text-3xl font-semibold mb-6">
@@ -57,7 +57,7 @@ export default function About() {
         </div>
       </section>
 
-      {/* 🎯 FOCO ATUAL */}
+      {/*FOCO ATUAL */}
       <section className="py-20 max-w-4xl mx-auto">
         <FadeIn>
           <h2 className="text-3xl font-semibold mb-10">
@@ -103,7 +103,7 @@ export default function About() {
         </div>
       </section>
 
-      {/* 💡 DIFERENCIAL */}
+      {/*DIFERENCIAL */}
       <section className="py-20 max-w-4xl mx-auto text-center">
         <FadeIn>
           <h2 className="text-3xl font-semibold mb-6">
@@ -120,7 +120,7 @@ export default function About() {
         </FadeIn>
       </section>
 
-      {/* 📩 CTA */}
+      {/*CTA */}
       <section className="py-20 text-center">
         <FadeIn>
           <h2 className="text-3xl font-semibold mb-6">
