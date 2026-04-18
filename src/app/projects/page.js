@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import FadeIn from "@/components/FadeIn";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -34,48 +35,55 @@ export default function ProjectsPage() {
   ];
 
   return (
-    <main className="min-h-screen text-white px-6 pt-65 pb-[90px] max-w-6xl mx-auto">
+    <main className="min-h-screen text-white px-6 pt-32 md:pt-40 pb-20 max-w-6xl mx-auto">
 
-      {/*INTRO*/}
-      <FadeIn>
-        <section className="text-center mb-20">
+      {/* 🔥 INTRO */}
+      <section className="text-center mb-16">
+        <FadeIn>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Projetos & Experimentos
           </h1>
+        </FadeIn>
+
+        <FadeIn delay={0.2}>
           <p className="text-gray-400 max-w-xl mx-auto">
             Explora minhas criações, desde APIs robustas até interfaces modernas.
           </p>
-        </section>
-      </FadeIn>
+        </FadeIn>
+      </section>
 
-      {/*CATEGORIAS */}
-      <FadeIn direction="left" delay={0.4}>
-      <div className="grid md:grid-cols-3 gap-6 mb-20">
-        <CategoryCard title="Frontend" link="/projects/frontend" />
-        <CategoryCard title="Backend" link="/projects/backend" />
-        <CategoryCard title="Fullstack" link="/projects/fullstack" />
-      </div>
-      </FadeIn>
+      {/* 🧭 CATEGORIAS */}
+      <section className="mb-20 border-t border-yellow-500/10 pt-10">
+        <FadeIn direction="left">
+          <div className="grid md:grid-cols-3 gap-6">
+            <CategoryCard title="Frontend" link="/projects/frontend" />
+            <CategoryCard title="Backend" link="/projects/backend" />
+            <CategoryCard title="Fullstack" link="/projects/fullstack" />
+          </div>
+        </FadeIn>
+      </section>
 
-      {/*DESTAQUES*/}
-      <FadeIn>
-        <h2 className="text-2xl md:text-3xl font-semibold mb-10 text-center">
-          Destaques Recentes
-        </h2>
-      </FadeIn>
+      {/* ⭐ DESTAQUES */}
+      <section className="border-t border-yellow-500/10 pt-12">
+        <FadeIn>
+          <h2 className="text-2xl md:text-3xl font-semibold mb-10 text-center">
+            Destaques Recentes
+          </h2>
+        </FadeIn>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {featuredProjects.map((project, i) => (
-          <FadeIn key={project.id} delay={i * 0.2}>
-            <ProjectCard
-              project={project}
-              onClick={() => setSelectedProject(project)}
-            />
-          </FadeIn>
-        ))}
-      </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {featuredProjects.map((project, i) => (
+            <FadeIn key={project.id} delay={i * 0.2}>
+              <ProjectCard
+                project={project}
+                onClick={() => setSelectedProject(project)}
+              />
+            </FadeIn>
+          ))}
+        </div>
+      </section>
 
-      {/*MODAL */}
+      {/* 🧩 MODAL */}
       <AnimatePresence>
         {selectedProject && (
           <ProjectModal
@@ -84,6 +92,7 @@ export default function ProjectsPage() {
           />
         )}
       </AnimatePresence>
+
     </main>
   );
 }
@@ -173,22 +182,22 @@ function ProjectModal({ project, onClose }) {
         </div>
 
         <div className="mt-8 flex gap-4">
-          <a
+          <Link
             href={project.github}
-            target="_blank"
+            target="_blank" rel="noopener noreferrer"
             className="flex-1 text-center py-3 bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition"
           >
             Ver código
-          </a>
+          </Link>
 
           {project.deploy && (
-            <a
+            <Link
               href={project.deploy}
-              target="_blank"
+              target="_blank" rel="noopener noreferrer"
               className="flex-1 text-center py-3 border border-yellow-400 text-yellow-400 font-semibold rounded-xl hover:bg-yellow-400 hover:text-black transition"
             >
               Ver projeto
-            </a>
+            </Link>
           )}
         </div>
       </motion.div>
@@ -198,7 +207,7 @@ function ProjectModal({ project, onClose }) {
 
 function CategoryCard({ title, link }) {
   return (
-    <a
+    <Link
       href={link}
       className="p-8 rounded-2xl border border-yellow-500/10 hover:border-yellow-400/40 hover:bg-yellow-400/5 transition text-center group"
     >
@@ -208,6 +217,6 @@ function CategoryCard({ title, link }) {
       <span className="text-sm text-gray-500">
         Ver todos →
       </span>
-    </a>
+    </Link>
   );
 }

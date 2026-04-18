@@ -6,10 +6,10 @@ import { FadeItem } from "@/components/HeroAnimation";
 
 export default function Home() {
   return (
-    <main className="text-white">
+    <main className="text-white" >
 
-      {/*INTRO*/}
-      <section className="min-h-screen flex flex-col justify-center items-center text-center px-6">
+      {/*INTRO <section className="min-h-screen flex flex-col justify-center items-center text-center px-6"> */}
+      <section className="min-h-screen flex flex-col items-center text-center px-6 justify-center">
 
         <FadeItem direction="down" delay={0}>
           <h1 className="text-4xl md:text-6xl font-bold leading-tight">
