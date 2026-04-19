@@ -6,11 +6,21 @@ import { FadeItem } from "@/components/HeroAnimation";
 
 export default function Home() {
   return (
-    <main className="text-white" >
+    <main className="text-white overflow-x-hidden">
 
       {/*INTRO <section className="min-h-screen flex flex-col justify-center items-center text-center px-6"> */}
-      <section className="min-h-screen flex flex-col items-center text-center px-6 justify-center">
+      <section
+        className="
+          flex flex-col items-center text-center px-6 mx-auto max-w-7xl
 
+          min-h-[clamp(500px,calc(100vh-90px),800px)]
+
+          justify-center
+          pt-20 md:pt-24
+          pb-12 md:pb-16
+          gap-6
+        "
+      >
         <FadeItem direction="down" delay={0}>
           <h1 className="text-4xl md:text-6xl font-bold leading-tight">
             Transformo ideias em experiências web{" "}
@@ -19,14 +29,14 @@ export default function Home() {
         </FadeItem>
 
         <FadeItem direction="up" delay={0.2}>
-          <p className="mt-6 text-gray-400 max-w-xl text-lg">
+          <p className="text-gray-400 max-w-xl text-lg">
             Desenvolvedor FullStack em evolução, focado em criar aplicações rápidas,
             funcionais e com boa experiência para o usuário.
           </p>
         </FadeItem>
 
         <FadeItem direction="up" delay={0.4}>
-          <div className="mt-8 flex gap-4">
+          <div className="flex gap-4 mt-2">
             <Link
               href="/projects"
               className="px-6 py-3 bg-yellow-400 text-black font-medium rounded-lg hover:bg-yellow-300 transition"
@@ -42,7 +52,6 @@ export default function Home() {
             </Link>
           </div>
         </FadeItem>
-
       </section>
 
       {/* VALOR */}
@@ -88,7 +97,7 @@ export default function Home() {
 
           <div className="grid md:grid-cols-2 gap-8">
 
-            {[1, 2].map((item, i) => (
+            {["Frontend", "Backend"].map((item, i) => (
               <FadeIn key={item} delay={i * 0.2}>
                 <div className="p-6 border border-yellow-500/10 rounded-xl hover:border-yellow-400/40 transition hover:-translate-y-1 transition">
                   <h3 className="text-xl font-medium mb-2">
@@ -98,7 +107,7 @@ export default function Home() {
                     Pequena descrição do projecto e o que ele resolve.
                   </p>
                   <Link
-                    href="#"
+                    href={`/projects/${item.toLowerCase()}`}
                     className="text-yellow-400 hover:underline"
                   >
                     Ver mais →

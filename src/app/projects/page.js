@@ -37,7 +37,7 @@ export default function ProjectsPage() {
   return (
     <main className="min-h-screen text-white px-6 pt-32 md:pt-40 pb-20 max-w-6xl mx-auto">
 
-      {/* 🔥 INTRO */}
+      {/*INTRO */}
       <section className="text-center mb-16">
         <FadeIn>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -52,7 +52,7 @@ export default function ProjectsPage() {
         </FadeIn>
       </section>
 
-      {/* 🧭 CATEGORIAS */}
+      {/*CATEGORIAS */}
       <section className="mb-20 border-t border-yellow-500/10 pt-10">
         <FadeIn direction="left">
           <div className="grid md:grid-cols-3 gap-6">
@@ -63,7 +63,7 @@ export default function ProjectsPage() {
         </FadeIn>
       </section>
 
-      {/* ⭐ DESTAQUES */}
+      {/*DESTAQUES */}
       <section className="border-t border-yellow-500/10 pt-12">
         <FadeIn>
           <h2 className="text-2xl md:text-3xl font-semibold mb-10 text-center">
@@ -83,7 +83,7 @@ export default function ProjectsPage() {
         </div>
       </section>
 
-      {/* 🧩 MODAL */}
+      {/*MODAL */}
       <AnimatePresence>
         {selectedProject && (
           <ProjectModal
@@ -103,13 +103,13 @@ function ProjectCard({ project, onClick }) {
       onClick={onClick}
       className="cursor-pointer h-full flex flex-col bg-zinc-900 rounded-xl overflow-hidden border border-yellow-500/10 hover:border-yellow-400/40 hover:-translate-y-1 transition-all duration-300 group"
     >
-      <div className="overflow-hidden">
+      {project.type !== "backend" && (<div className="overflow-hidden">
         <img
           src={project.image}
           alt={project.title}
           className="w-full h-48 object-cover group-hover:scale-105 transition duration-300"
         />
-      </div>
+      </div>)}
 
       <div className="p-6 flex flex-col flex-1">
         <span className="text-xs uppercase text-yellow-400 font-semibold">
