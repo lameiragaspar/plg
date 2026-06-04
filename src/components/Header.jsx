@@ -43,6 +43,7 @@ export default function Header() {
           
           {/* Logo */}
           <div className="flex items-center gap-2 group cursor-pointer">
+            <Link href="/" target="_self"> 
             <Image
               src="/assets/logo.jpg"
               alt="logo"
@@ -51,8 +52,11 @@ export default function Header() {
               className="rounded-full transition-transform duration-300 group-hover:scale-110"
               priority
             />
+            </Link>
             <span className="text-lg font-semibold tracking-wide text-yellow-400 group-hover:text-yellow-300 transition">
-              PLG Dev
+              <Link href="/" target="_self">
+                .dev
+              </Link>
             </span>
           </div>
 

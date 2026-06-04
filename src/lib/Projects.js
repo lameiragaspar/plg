@@ -1,0 +1,87 @@
+export function getAllProjects() {
+  return [
+    {
+      id: 1,
+      type: "frontend",
+      title: "Landing Moderna",
+      description: "Interface com foco em conversão e performance otimizada.",
+      image: "https://static1.makeuseofimages.com/wordpress/wp-content/uploads/2023/02/example-javascript-code.jpg",
+      tech: ["Next.js", "Tailwind"],
+      likes: 120,
+      motivation: "Criar uma landing de alta conversão sem frameworks pesados.",
+      learnings: "Otimização de Core Web Vitals e estratégias de CTA.",
+      github: "https://landing-moderna.vercel.app",
+      deploy: "https://landing-moderna.vercel.app",
+    },
+    {
+      id: 2,
+      type: "backend",
+      title: "API de Logística",
+      description: "Sistema de rastreio em tempo real com filas e cache.",
+      tech: ["Node.js", "Redis", "Docker", "JavaScript"],
+      method: "REST",
+      endpoints: [
+        { method: "GET",    path: "/api/orders",        description: "Lista encomendas" },
+        { method: "POST",   path: "/api/orders",        description: "Cria encomenda"  },
+        { method: "GET",    path: "/api/orders/:id",    description: "Detalhe"         },
+        { method: "DELETE", path: "/api/orders/:id",    description: "Remove"          },
+      ],
+      likes: 74,
+      motivation: "Otimizar rotas de entrega para múltiplos transportadores.",
+      learnings: "Gestão de filas com Bull e estratégias de cache com Redis.",
+      github: "https://landing-moderna.vercel.app",
+      deploy: "#",
+    },
+    {
+      id: 3,
+      type: "fullstack",
+      title: "E-commerce Pro",
+      description: "Plataforma completa com checkout, inventário e painel admin.",
+      image: "https://static1.makeuseofimages.com/wordpress/wp-content/uploads/2023/02/example-javascript-code.jpg",
+      tech: ["Next.js", "Node", "Prisma", "PostgreSQL", "Tailwind"],
+      likes: 198,
+      motivation: "Sistema escalável para lojistas independentes.",
+      learnings: "Gestão de estados complexos e integração de webhooks de pagamento.",
+      github: "https://landing-moderna.vercel.app",
+      deploy: "https://landing-moderna.vercel.app",
+    },
+  ];
+}
+
+export function getCategories() {
+  return [
+    {
+      key: "frontend",
+      title: "Frontend",
+      link: "/projects/frontend",
+      description: "Interfaces, animações e experiências visuais.",
+      icon: "🖥",
+      accent: "yellow",
+      accentClass: "text-yellow-400",
+      borderClass: "border-yellow-400/30",
+      hoverBg: "hover:bg-yellow-400/5",
+    },
+    {
+      key: "backend",
+      title: "Backend",
+      link: "/projects/backend",
+      description: "APIs, lógica de negócio e infraestrutura.",
+      icon: "⚙️",
+      accent: "blue",
+      accentClass: "text-blue-400",
+      borderClass: "border-blue-400/30",
+      hoverBg: "hover:bg-blue-400/5",
+    },
+    {
+      key: "fullstack",
+      title: "Fullstack",
+      link: "/projects/fullstack",
+      description: "Produtos completos do front ao banco de dados.",
+      icon: "⚡",
+      accent: "emerald",
+      accentClass: "text-emerald-400",
+      borderClass: "border-emerald-400/30",
+      hoverBg: "hover:bg-emerald-400/5",
+    },
+  ];
+}
