@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import ProjectCard from "@/components/ProjectCard";
 import ProjectModal from "@/components/ProjectModal";
@@ -19,6 +19,8 @@ export default function ProjectsLayout({
   headerExtra = null,
   renderModalExtra = null,
   sectionExtra = null,
+  // Nova prop: activa a barra de filtro por tecnologia (usado em /frontend)
+  showTechFilter = false,
 }) {
   const ALL_PROJECTS = getAllProjects();
   const CATEGORIES = relatedCategories.length > 0 ? relatedCategories : getCategories();
@@ -29,12 +31,27 @@ export default function ProjectsLayout({
   const [liked, setLiked]                     = useState({});
   const [rating, setRating]                   = useState(0);
   const [comment, setComment]                 = useState("");
+  // Estado do filtro por tech — só usado quando showTechFilter=true
+  const [activeTech, setActiveTech]           = useState(null);
 
+  // Tecnologias únicas com contagem, ordenadas por frequência
+  const availableTechsWithCount = useMemo(() => {
+    if (!showTechFilter) return [];
+    const map = {};
+    projects.forEach((p) => p.tech?.forEach((t) => { map[t] = (map[t] ?? 0) + 1; }));
+    return Object.entries(map)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  }, [showTechFilter, projects]);
+
+  // Filtro combinado: texto de busca + tech activa
   const filteredProjects = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return projects;
-    return projects.filter((p) => p.title.toLowerCase().includes(q));
-  }, [search, projects]);
+    let result = projects;
+    if (q) result = result.filter((p) => p.title.toLowerCase().includes(q));
+    if (activeTech) result = result.filter((p) => p.tech?.includes(activeTech));
+    return result;
+  }, [search, activeTech, projects]);
 
   const toggleLike = (id) =>
     setLiked((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -72,9 +89,78 @@ export default function ProjectsLayout({
             {tagline && <span className="text-white"> {tagline}</span>}
           </p>
         </FadeIn>
+
+        {/* Extra visual por categoria — TerminalStats (backend) ou ArchDiagram (fullstack) */}
         {headerExtra && (
           <FadeIn delay={0.6}>
-            <div className="mt-6">{headerExtra}</div>
+            <div className="mt-8">{headerExtra}</div>
+          </FadeIn>
+        )}
+
+        {/* Tech Filter Bar — exclusivo de /frontend */}
+        {showTechFilter && availableTechsWithCount.length > 0 && (
+          <FadeIn delay={0.6}>
+            <div className="mt-8">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-gray-600 mb-3">
+                Filtrar por tecnologia
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {/* Pill "Todos" */}
+                <button
+                  onClick={() => setActiveTech(null)}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-all duration-200 cursor-pointer ${
+                    !activeTech
+                      ? "bg-yellow-400 text-black border-yellow-400 font-semibold"
+                      : "border-yellow-500/20 text-gray-400 hover:border-yellow-400/40 hover:text-white"
+                  }`}
+                >
+                  Todos
+                  <span className={`ml-1.5 text-[10px] ${!activeTech ? "opacity-60" : "opacity-40"}`}>
+                    {projects.length}
+                  </span>
+                </button>
+
+                {/* Pills por tech */}
+                {availableTechsWithCount.map(({ name, count }) => (
+                  <button
+                    key={name}
+                    onClick={() => setActiveTech(activeTech === name ? null : name)}
+                    className={`text-xs px-3 py-1.5 rounded-full border transition-all duration-200 cursor-pointer ${
+                      activeTech === name
+                        ? "bg-yellow-400 text-black border-yellow-400 font-semibold"
+                        : "border-yellow-500/20 text-gray-400 hover:border-yellow-400/40 hover:text-white"
+                    }`}
+                  >
+                    {name}
+                    <span className={`ml-1.5 text-[10px] ${activeTech === name ? "opacity-60" : "opacity-40"}`}>
+                      {count}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Contador + limpar filtro */}
+              <AnimatePresence>
+                {activeTech && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.2 }}
+                    className="mt-3 text-xs text-gray-600"
+                  >
+                    {filteredProjects.length} projecto{filteredProjects.length !== 1 ? "s" : ""} com{" "}
+                    <span className="text-yellow-400">{activeTech}</span>
+                    <button
+                      onClick={() => setActiveTech(null)}
+                      className="ml-2 text-gray-600 hover:text-yellow-400 transition cursor-pointer"
+                    >
+                      ✕ limpar
+                    </button>
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </div>
           </FadeIn>
         )}
       </section>
@@ -82,7 +168,6 @@ export default function ProjectsLayout({
       {/* BUSCA */}
       <section className="mb-12 max-w-2xl mx-auto">
         <FadeIn direction="left" delay={0.4}>
-          {/* min-w-0 evita que o input force o pai a crescer */}
           <div className="relative min-w-0">
             <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-500">
               🔍
@@ -124,28 +209,54 @@ export default function ProjectsLayout({
           2 colunas → 640–1024px (sm → md)
           3 colunas → > 1024px (lg)
       */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-        {filteredProjects.map((project, i) => (
-          <FadeIn key={project.id} delay={i * 0.15}>
-            <div className="relative group min-w-0">
-              <ProjectCard
-                project={project}
-                onClick={() => setSelectedProject(project)}
-              />
-              <button
-                onClick={(e) => { e.stopPropagation(); toggleLike(project.id); }}
-                className={`absolute top-3 right-3 z-10 text-xs px-2 py-1 rounded-md border transition-all cursor-pointer ${
-                  liked[project.id]
-                    ? "bg-yellow-400 text-black border-yellow-400"
-                    : "bg-black/40 border-yellow-500/20 text-gray-400 hover:border-yellow-400/50"
-                }`}
+      <section>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTech ?? "all"}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
+          >
+            {filteredProjects.length > 0 ? (
+              filteredProjects.map((project, i) => (
+                <motion.div
+                  key={project.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, delay: i * 0.07 }}
+                  className="relative group min-w-0"
+                >
+                  <ProjectCard
+                    project={project}
+                    onClick={() => setSelectedProject(project)}
+                  />
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleLike(project.id); }}
+                    className={`absolute top-3 right-3 z-10 text-xs px-2 py-1 rounded-md border transition-all cursor-pointer ${
+                      liked[project.id]
+                        ? "bg-yellow-400 text-black border-yellow-400"
+                        : "bg-black/40 border-yellow-500/20 text-gray-400 hover:border-yellow-400/50"
+                    }`}
+                  >
+                    {liked[project.id] ? "❤️" : "🤍"}{" "}
+                    {liked[project.id] ? project.likes + 1 : project.likes}
+                  </button>
+                </motion.div>
+              ))
+            ) : (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-gray-500 col-span-full text-center py-16"
               >
-                {liked[project.id] ? "❤️" : "🤍"}{" "}
-                {liked[project.id] ? project.likes + 1 : project.likes}
-              </button>
-            </div>
-          </FadeIn>
-        ))}
+                Nenhum projecto encontrado
+                {activeTech && <> com <span className="text-yellow-400">{activeTech}</span></>}.
+              </motion.p>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </section>
 
       {/* SECÇÃO EXTRA */}
@@ -186,10 +297,6 @@ export default function ProjectsLayout({
               className="w-full p-4 bg-black/40 border border-yellow-500/10 rounded-lg mb-4 outline-none focus:border-yellow-400/50 transition-all resize-none text-white placeholder-gray-600"
               rows="3"
             />
-            {/*
-              Em mobile (<sm): estrelas em cima, botão abaixo (flex-col)
-              Em desktop (sm+): estrelas e botão na mesma linha (flex-row)
-            */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
