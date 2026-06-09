@@ -11,7 +11,7 @@ const TEXTO = "Disponível para projectos";
  * Correcções vs original:
  * - Bug: `i < texto.length - 1` saltava o último caractere → corrigido com slice
  * - Dot piscante substituído por ping (padrão "online" reconhecível)
- * - Cursor | em vez de _ (mais legível em fundos escuros)
+ * - Cursor | 
  */
 export default function DisponivelBadge() {
   const [displayedText, setDisplayedText] = useState("");

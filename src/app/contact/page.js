@@ -13,8 +13,8 @@ import DisponivelBadge from "@/components/DisponivelBadge";
 const CONTACT_LINKS = [
   {
     label: "Email",
-    value: "pedrolameira20@email.com",
-    href: "mailto:pedrolameira20@email.com",
+    value: "pedrolameira20@gmail.com",
+    href: "mailto:pedrolameira20@gmail.com",
     iconType: "email",
     description: "Resposta em menos de 24h",
   },

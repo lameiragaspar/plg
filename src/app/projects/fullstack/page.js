@@ -3,131 +3,130 @@
 import ProjectsLayout from "@/components/ProjectsLayout";
 import { getAllProjects, getCategories } from "@/lib/Projects";
 
-const ALL_PROJECTS = getAllProjects();
-const CATEGORIES   = getCategories();
+const ALL_PROJECTS     = getAllProjects();
+const CATEGORIES       = getCategories();
 
-const projects          = ALL_PROJECTS.filter((p) => p.type === "fullstack");
+const projects         = ALL_PROJECTS.filter((p) => p.type === "fullstack");
 const relatedCategories = CATEGORIES.filter((c) => c.key !== "fullstack");
 
 // ── ArchDiagram ────────────────────────────────────────────────────────────
-// Aparece no cabeçalho de /fullstack.
-// Ilustra a arquitectura UI → API → DB para recrutadores técnicos e não-técnicos.
+// Diagrama estático UI → API → DB com a paleta do site.
+// Aparece como secção extra após o grid de projectos, exclusivo de /fullstack.
 function ArchDiagram() {
-  const nodes = [
+  const layers = [
     {
-      id: "ui",
       label: "UI",
-      sub: "Next.js",
-      bg: "bg-yellow-400/10",
-      border: "border-yellow-400/25",
-      text: "text-yellow-400",
+      sublabel: "React / Next.js",
+      accentClass: "text-yellow-400",
+      borderClass: "border-yellow-400/25",
+      bg: "bg-yellow-400/8",
     },
     {
-      id: "api",
       label: "API",
-      sub: "Node.js",
-      bg: "bg-blue-400/10",
-      border: "border-blue-400/25",
-      text: "text-blue-400",
+      sublabel: "Node / Express",
+      accentClass: "text-blue-400",
+      borderClass: "border-blue-400/25",
+      bg: "bg-blue-400/8",
     },
     {
-      id: "db",
       label: "DB",
-      sub: "Postgres",
-      bg: "bg-emerald-400/10",
-      border: "border-emerald-400/25",
-      text: "text-emerald-400",
+      sublabel: "PostgreSQL / Mongo",
+      accentClass: "text-emerald-400",
+      borderClass: "border-emerald-400/25",
+      bg: "bg-emerald-400/8",
     },
   ];
 
-  const edges = ["REST / HTTP", "SQL / ORM"];
-
   return (
-    <div className="flex items-center justify-center mt-4 select-none flex-wrap gap-y-4">
-      {nodes.map((node, i) => (
-        <div key={node.id} className="flex items-center">
+    <div className="border-t border-yellow-500/10 pt-16">
+      <p className="text-center text-gray-500 uppercase tracking-[0.2em] text-xs mb-10">
+        Arquitectura típica
+      </p>
 
-          {/* Nó */}
-          <div className="flex flex-col items-center gap-1.5">
+      {/* Desktop: horizontal — Mobile: vertical */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-0 max-w-2xl mx-auto">
+        {layers.map((layer, i) => (
+          <div key={layer.label} className="flex flex-col sm:flex-row items-center">
+
+            {/* Bloco */}
             <div
               className={`
-                w-16 h-11 rounded-xl
-                ${node.bg} border ${node.border}
-                flex items-center justify-center
-                ${node.text} font-mono font-bold text-sm tracking-wide
+                flex flex-col items-center gap-1
+                px-8 py-5 rounded-2xl border
+                ${layer.bg} ${layer.borderClass}
+                min-w-[110px] sm:min-w-[130px]
               `}
             >
-              {node.label}
-            </div>
-            <span className="text-[10px] text-gray-600 uppercase tracking-widest">
-              {node.sub}
-            </span>
-          </div>
-
-          {/* Conector (só entre nós) */}
-          {i < edges.length && (
-            <div className="flex flex-col items-center mx-5">
-              <span className="text-[9px] text-gray-700 uppercase tracking-wider mb-1.5">
-                {edges[i]}
+              <span className={`text-lg font-bold font-mono ${layer.accentClass}`}>
+                {layer.label}
               </span>
-              <div className="flex items-center gap-1">
-                <div className="w-4 h-px bg-gray-700" />
-                <div className="w-4 h-px bg-gray-700" />
-                <div className="w-4 h-px bg-gray-700" />
-                <span className="text-gray-600 text-xs leading-none ml-0.5">›</span>
-              </div>
+              <span className="text-[10px] text-gray-500 text-center leading-snug">
+                {layer.sublabel}
+              </span>
             </div>
-          )}
 
-        </div>
-      ))}
+            {/* Seta entre blocos (não aparece após o último) */}
+            {i < layers.length - 1 && (
+              <>
+                {/* Mobile: seta vertical */}
+                <div className="flex sm:hidden flex-col items-center py-2 text-gray-700">
+                  <span className="w-px h-5 bg-gray-700" />
+                  <span className="text-xs leading-none">↓</span>
+                </div>
+
+                {/* Desktop: seta horizontal */}
+                <div className="hidden sm:flex items-center gap-1 px-2 text-gray-700">
+                  <span className="w-6 h-px bg-gray-700" />
+                  <span className="text-xs leading-none">→</span>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <p className="text-center text-gray-400 text-xs mt-8 font-mono">
+        Do browser ao banco de dados — integração de ponta a ponta.
+      </p>
     </div>
   );
 }
 
 // ── SplitStack ─────────────────────────────────────────────────────────────
-// Aparece no modal, divide as tecnologias em front e back.
+// Slot de conteúdo extra no modal, exclusivo de /fullstack.
+// Divide as tecnologias do projecto em front e back.
 function SplitStack({ project }) {
   const frontTech = project.frontTech ?? project.tech?.slice(0, 2) ?? [];
-  const backTech  = project.backTech  ?? project.tech?.slice(2)    ?? [];
+  const backTech  = project.backTech ?? project.tech?.slice(2) ?? [];
 
   if (!frontTech.length && !backTech.length) return null;
 
   return (
     <div>
-      <h4 className="text-emerald-400 font-semibold mb-3">Stack completa</h4>
+      <h4 className="text-emerald-400 font-mono text-[11px] uppercase tracking-widest mb-3">
+        Stack completa
+      </h4>
       <div className="grid grid-cols-2 gap-3">
-
-        {/* Front */}
         <div className="bg-zinc-950/60 rounded-lg p-3">
           <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-2">Frontend</p>
           <div className="flex flex-wrap gap-1.5">
             {frontTech.map((t) => (
-              <span
-                key={t}
-                className="text-xs px-2 py-0.5 rounded border bg-yellow-400/10 text-yellow-400 border-yellow-400/20"
-              >
+              <span key={t} className="text-xs px-2 py-0.5 rounded border bg-yellow-400/10 text-yellow-400 border-yellow-400/20">
                 {t}
               </span>
             ))}
           </div>
         </div>
-
-        {/* Back */}
         <div className="bg-zinc-950/60 rounded-lg p-3">
           <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-2">Backend</p>
           <div className="flex flex-wrap gap-1.5">
             {backTech.map((t) => (
-              <span
-                key={t}
-                className="text-xs px-2 py-0.5 rounded border bg-blue-400/10 text-blue-400 border-blue-400/20"
-              >
+              <span key={t} className="text-xs px-2 py-0.5 rounded border bg-blue-400/10 text-blue-400 border-blue-400/20">
                 {t}
               </span>
             ))}
           </div>
         </div>
-
       </div>
     </div>
   );
@@ -143,7 +142,7 @@ export default function FullstackProjectsPage() {
       accentClass="text-emerald-400"
       projects={projects}
       relatedCategories={relatedCategories}
-      headerExtra={<ArchDiagram />}
+      sectionExtra={<ArchDiagram />}
       renderModalExtra={(project) => <SplitStack project={project} />}
     />
   );

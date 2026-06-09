@@ -374,18 +374,14 @@ function HeroStats() {
   const stats = useMemo(() => ({
     projects: ALL_PROJECTS.length,
     techs: new Set(ALL_PROJECTS.flatMap((p) => p.tech ?? [])).size,
+    area: new Set(ALL_PROJECTS.map((p) => p.type ?? [])).size,
   }), []);
 
   return (
-    <div className="flex items-center gap-6 justify-center text-sm text-gray-500">
-      <span><span className="text-yellow-400 font-semibold">{stats.projects}</span> projectos</span>
-      <span className="w-px h-4 bg-gray-700" />
-      <span><span className="text-yellow-400 font-semibold">{stats.techs}</span> tecnologias</span>
-      <span className="w-px h-4 bg-gray-700" />
-      <span className="flex items-center gap-1.5">
-        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-        Disponível
-      </span>
+    <div className="flex items-center gap-6 justify-center flex-wrap text-sm text-gray-500">
+      <span className="px-6 border-l border-r pg-6 border-gray-700"><span className="text-yellow-400 font-semibold">{stats.projects}</span> projectos</span>
+      <span className="px-6 border-l border-r border-gray-700"><span className="text-yellow-400 font-semibold">{stats.techs}</span> tecnologias</span>
+      <span className="px-6 border-l border-r border-gray-700"><span className="text-yellow-400 font-semibold">{stats.area}</span> áreas</span>
     </div>
   );
 }
@@ -450,13 +446,13 @@ export default function Home() {
           <div className="relative z-10 flex flex-wrap gap-3 justify-center">
             <Link
               href="/projects"
-              className="px-6 py-3 bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-all duration-200 hover:scale-105 active:scale-95"
+              className="px-6 py-3 sm:min-w-[180px] text-center bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-all duration-200 hover:scale-105 active:scale-95"
             >
               Ver projectos
             </Link>
             <Link
               href="/contact"
-              className="px-6 py-3 border border-yellow-400/40 text-yellow-400 rounded-xl hover:bg-yellow-400/10 transition-all duration-200"
+              className="px-6 py-3 sm:min-w-[180px] text-center border border-yellow-400/40 text-yellow-400 rounded-xl hover:bg-yellow-400/10 transition-all duration-200"
             >
               Entrar em contacto
             </Link>
@@ -580,13 +576,13 @@ export default function Home() {
             <div className="flex flex-wrap gap-3 justify-center">
               <Link
                 href="/contact"
-                className="px-8 py-3.5 bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-all duration-200 hover:scale-105 active:scale-95"
+                className="px-6 py-3 sm:min-w-[180px] text-center bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-all duration-200 hover:scale-105 active:scale-95"
               >
                 Entrar em contacto
               </Link>
               <Link
                 href="/about"
-                className="px-8 py-3.5 border border-white/10 text-gray-300 rounded-xl hover:border-white/25 hover:text-white transition"
+                className="px-6 py-3 sm:min-w-[180px] text-center border border-yellow-400/40 text-yellow-400 rounded-xl hover:bg-yellow-400/10 transition-all duration-200"
               >
                 Sobre mim
               </Link>

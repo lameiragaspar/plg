@@ -9,21 +9,102 @@ import ProjectModal from "@/components/ProjectModal";
 import BigCategoryCard from "@/components/BigCategoryCard";
 import { getAllProjects, getCategories } from "@/lib/Projects";
 
+// ── Tech Filter Bar ────────────────────────────────────────────────────────
+// Renderizado apenas em /frontend (showTechFilter={true}).
+// Isola estado e lógica — ProjectsLayout só expõe a prop booleana.
+function TechFilterBar({ techs, active, onSelect }) {
+  return (
+    <div className="flex flex-wrap gap-2 justify-center mt-8">
+      <button
+        onClick={() => onSelect(null)}
+        className={`text-xs px-3 py-1.5 rounded-full border transition duration-200 cursor-pointer ${
+          !active
+            ? "bg-yellow-400 text-black border-yellow-400 font-semibold"
+            : "border-yellow-500/20 text-gray-400 hover:border-yellow-400/40 hover:text-white"
+        }`}
+      >
+        Todos
+      </button>
+      {techs.map((tech) => (
+        <button
+          key={tech}
+          onClick={() => onSelect(active === tech ? null : tech)}
+          className={`text-xs px-3 py-1.5 rounded-full border transition duration-200 cursor-pointer ${
+            active === tech
+              ? "bg-yellow-400 text-black border-yellow-400 font-semibold"
+              : "border-yellow-500/20 text-gray-400 hover:border-yellow-400/40 hover:text-white"
+          }`}
+        >
+          {tech}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── CTA por categoria ──────────────────────────────────────────────────────
+const CTA_CONFIG = {
+  Frontend:{ 
+    heading: "Tens uma ideia de interface?",
+    sub: "Transformo designs e conceitos em interfaces modernas, rápidas e acessíveis.", 
+    cta: "Falar sobre o projecto"
+  },
+  Backend:{
+    heading: "Precisas de uma API sólida?",    
+    sub: "Construo sistemas robustos, seguros e preparados para escalar.",               
+    cta: "Discutir a arquitectura"  
+  },
+  Fullstack:{
+    heading: "Queres um produto completo?",    
+    sub: "Do design ao banco de dados — entrego soluções de ponta a ponta.",             
+    cta: "Arrancar o projecto"      
+  },
+  default:{
+    heading: "Vamos tirar essa ideia do papel?", 
+    sub: "Disponível para colaborar em produtos digitais modernos.",                   
+    cta: "Entrar em contacto"
+  },
+};
+
+// ── Feedback por categoria ─────────────────────────────────────────────────
+const FEEDBACK_CONFIG = {
+  Frontend: {
+    heading: "O design funcionou?",         
+    sub: "A tua opinião sobre usabilidade e estética ajuda a melhorar cada interface.", 
+    placeholder: "O layout está intuitivo? A navegação faz sentido? Diz-me tudo..."       
+  },
+  Backend: {
+    heading: "A documentação está clara?",  
+    sub: "Feedback sobre clareza das APIs e organização do código.",                    
+    placeholder: "Os endpoints fazem sentido? Faltou alguma rota? Conta-me..."            
+  },
+  Fullstack: { 
+    heading: "A arquitectura faz sentido?", 
+    sub: "A tua visão sobre a integração front-back ajuda a construir produtos melhores.", 
+    placeholder: "A stack escolhida faz sentido para o problema? O que melhorarias?" 
+  },
+  default: { 
+    heading: "Feedback",                    
+    sub: "A tua opinião ajuda a evoluir o código.",                                     
+    placeholder: "Deixa o teu comentário..."                                              
+  },
+};
+
+// ── Layout principal ───────────────────────────────────────────────────────
 export default function ProjectsLayout({
   category,
   description,
-  projects = [],
+  projects       = [],
   relatedCategories = [],
-  accentClass = "text-yellow-400",
-  tagline = "",
-  headerExtra = null,
-  renderModalExtra = null,
-  sectionExtra = null,
-  // Nova prop: activa a barra de filtro por tecnologia (usado em /frontend)
-  showTechFilter = false,
+  accentClass    = "text-yellow-400",
+  tagline        = "",
+  headerExtra    = null,   // UI extra no cabeçalho (ex: TerminalStatsBar, ArchDiagram)
+  renderModalExtra = null, // Slot por categoria dentro do modal (ex: EndpointViewer, SplitStack)
+  sectionExtra   = null,   // Secção completa extra após o grid (ex: ArchDiagram)
+  showTechFilter = false,  // Activar filtro por tecnologia (/frontend)
 }) {
   const ALL_PROJECTS = getAllProjects();
-  const CATEGORIES = relatedCategories.length > 0 ? relatedCategories : getCategories();
+  const CATEGORIES   = relatedCategories.length > 0 ? relatedCategories : getCategories();
 
   const [selectedProject, setSelectedProject] = useState(null);
   const [search, setSearch]                   = useState("");
@@ -31,27 +112,54 @@ export default function ProjectsLayout({
   const [liked, setLiked]                     = useState({});
   const [rating, setRating]                   = useState(0);
   const [comment, setComment]                 = useState("");
-  // Estado do filtro por tech — só usado quando showTechFilter=true
-  const [activeTech, setActiveTech]           = useState(null);
 
-  // Tecnologias únicas com contagem, ordenadas por frequência
-  const availableTechsWithCount = useMemo(() => {
-    if (!showTechFilter) return [];
-    const map = {};
-    projects.forEach((p) => p.tech?.forEach((t) => { map[t] = (map[t] ?? 0) + 1; }));
-    return Object.entries(map)
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
-  }, [showTechFilter, projects]);
+  // — Estado interno do filtro por tech (só activo quando showTechFilter=true) —
+  const [activeTech, setActiveTech] = useState(null);
+  const [submitState, setSubmitState] = useState("idle"); // "idle" | "loading" | "success" | "error"
 
-  // Filtro combinado: texto de busca + tech activa
+  const fbCfg  = FEEDBACK_CONFIG[category] ?? FEEDBACK_CONFIG.default;
+  const ctaCfg = CTA_CONFIG[category] ?? CTA_CONFIG.default;
+
+  const handleFeedbackSubmit = async () => {
+    if (!comment.trim() || rating === 0) return;
+    setSubmitState("loading");
+    try {
+      // Quando o backend estiver pronto, esta rota já recebe tudo o que precisa:
+      // source (página de origem), rating, comment e timestamp.
+      await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source: category, // "Frontend" | "Backend" | "Fullstack"
+          rating,
+          comment: comment.trim(),
+          timestamp: new Date().toISOString(),
+        }),
+      });
+      setSubmitState("success");
+      setComment("");
+      setRating(0);
+    } catch {
+      setSubmitState("error");
+    } finally {
+      setTimeout(() => setSubmitState("idle"), 3500);
+    }
+  };
+
+  // Todas as techs únicas dos projectos desta categoria, ordenadas
+  const allTechs = useMemo(() => {
+    const set = new Set(projects.flatMap((p) => p.tech ?? []));
+    return [...set].sort();
+  }, [projects]);
+
+  // Filtragem composta: texto de busca + tech seleccionada
   const filteredProjects = useMemo(() => {
     const q = search.toLowerCase().trim();
     let result = projects;
     if (q) result = result.filter((p) => p.title.toLowerCase().includes(q));
     if (activeTech) result = result.filter((p) => p.tech?.includes(activeTech));
     return result;
-  }, [search, activeTech, projects]);
+  }, [search, projects, activeTech]);
 
   const toggleLike = (id) =>
     setLiked((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -90,77 +198,21 @@ export default function ProjectsLayout({
           </p>
         </FadeIn>
 
-        {/* Extra visual por categoria — TerminalStats (backend) ou ArchDiagram (fullstack) */}
+        {/* Slot para UI extra por página (TerminalStatsBar, etc.) */}
         {headerExtra && (
           <FadeIn delay={0.6}>
             <div className="mt-8">{headerExtra}</div>
           </FadeIn>
         )}
 
-        {/* Tech Filter Bar — exclusivo de /frontend */}
-        {showTechFilter && availableTechsWithCount.length > 0 && (
-          <FadeIn delay={0.6}>
-            <div className="mt-8">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-gray-600 mb-3">
-                Filtrar por tecnologia
-              </p>
-              <div className="flex flex-wrap justify-center gap-2">
-                {/* Pill "Todos" */}
-                <button
-                  onClick={() => setActiveTech(null)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-all duration-200 cursor-pointer ${
-                    !activeTech
-                      ? "bg-yellow-400 text-black border-yellow-400 font-semibold"
-                      : "border-yellow-500/20 text-gray-400 hover:border-yellow-400/40 hover:text-white"
-                  }`}
-                >
-                  Todos
-                  <span className={`ml-1.5 text-[10px] ${!activeTech ? "opacity-60" : "opacity-40"}`}>
-                    {projects.length}
-                  </span>
-                </button>
-
-                {/* Pills por tech */}
-                {availableTechsWithCount.map(({ name, count }) => (
-                  <button
-                    key={name}
-                    onClick={() => setActiveTech(activeTech === name ? null : name)}
-                    className={`text-xs px-3 py-1.5 rounded-full border transition-all duration-200 cursor-pointer ${
-                      activeTech === name
-                        ? "bg-yellow-400 text-black border-yellow-400 font-semibold"
-                        : "border-yellow-500/20 text-gray-400 hover:border-yellow-400/40 hover:text-white"
-                    }`}
-                  >
-                    {name}
-                    <span className={`ml-1.5 text-[10px] ${activeTech === name ? "opacity-60" : "opacity-40"}`}>
-                      {count}
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Contador + limpar filtro */}
-              <AnimatePresence>
-                {activeTech && (
-                  <motion.p
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    transition={{ duration: 0.2 }}
-                    className="mt-3 text-xs text-gray-600"
-                  >
-                    {filteredProjects.length} projecto{filteredProjects.length !== 1 ? "s" : ""} com{" "}
-                    <span className="text-yellow-400">{activeTech}</span>
-                    <button
-                      onClick={() => setActiveTech(null)}
-                      className="ml-2 text-gray-600 hover:text-yellow-400 transition cursor-pointer"
-                    >
-                      ✕ limpar
-                    </button>
-                  </motion.p>
-                )}
-              </AnimatePresence>
-            </div>
+        {/* Tech Filter — só aparece em /frontend */}
+        {showTechFilter && allTechs.length > 0 && (
+          <FadeIn delay={0.7}>
+            <TechFilterBar
+              techs={allTechs}
+              active={activeTech}
+              onSelect={setActiveTech}
+            />
           </FadeIn>
         )}
       </section>
@@ -170,7 +222,9 @@ export default function ProjectsLayout({
         <FadeIn direction="left" delay={0.4}>
           <div className="relative min-w-0">
             <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-500">
-              🔍
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+              </svg>
             </div>
             <input
               type="text"
@@ -179,8 +233,20 @@ export default function ProjectsLayout({
               onChange={(e) => setSearch(e.target.value)}
               onFocus={() => setShowDropdown(true)}
               onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
-              className="w-full min-w-0 pl-12 pr-4 py-4 rounded-2xl bg-zinc-900/50 border border-yellow-500/10 focus:border-yellow-400/50 focus:bg-zinc-900 outline-none transition-all duration-300 shadow-2xl"
+              className="w-full min-w-0 pl-11 pr-4 py-4 rounded-2xl bg-zinc-900/50 border border-yellow-500/10 focus:border-yellow-400/50 focus:bg-zinc-900 outline-none transition-all duration-300"
             />
+            {/* Botão limpar */}
+            {search && (
+              <button
+                onMouseDown={() => { setSearch(""); setShowDropdown(false); }}
+                className="absolute inset-y-0 right-4 flex items-center text-gray-600 hover:text-gray-300 transition cursor-pointer"
+                aria-label="Limpar busca"
+              >
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+                  <path d="M1 1l12 12M13 1L1 13" />
+                </svg>
+              </button>
+            )}
             {showDropdown && search && (
               <div className="absolute w-full mt-2 bg-zinc-900 border border-yellow-500/10 rounded-lg max-h-48 overflow-auto z-10 shadow-xl">
                 {filteredProjects.length > 0 ? (
@@ -204,30 +270,20 @@ export default function ProjectsLayout({
         </FadeIn>
       </section>
 
-      {/* GRID DE PROJETOS
-          1 coluna  → < 640px  (mobile)
-          2 colunas → 640–1024px (sm → md)
-          3 colunas → > 1024px (lg)
-      */}
-      <section>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTech ?? "all"}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
-          >
-            {filteredProjects.length > 0 ? (
-              filteredProjects.map((project, i) => (
-                <motion.div
-                  key={project.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.25, delay: i * 0.07 }}
-                  className="relative group min-w-0"
-                >
+      {/* GRID DE PROJETOS */}
+      <AnimatePresence mode="wait">
+        <motion.section
+          key={`${activeTech ?? "all"}-${search}`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2 }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
+        >
+          {filteredProjects.length > 0 ? (
+            filteredProjects.map((project, i) => (
+              <FadeIn key={project.id} delay={i * 0.1}>
+                <div className="relative group min-w-0 h-full">
                   <ProjectCard
                     project={project}
                     onClick={() => setSelectedProject(project)}
@@ -241,25 +297,33 @@ export default function ProjectsLayout({
                     }`}
                   >
                     {liked[project.id] ? "❤️" : "🤍"}{" "}
-                    {liked[project.id] ? project.likes + 1 : project.likes}
+                    {liked[project.id] ? (project.likes ?? 0) + 1 : project.likes ?? 0}
                   </button>
-                </motion.div>
-              ))
-            ) : (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-gray-500 col-span-full text-center py-16"
-              >
-                Nenhum projecto encontrado
-                {activeTech && <> com <span className="text-yellow-400">{activeTech}</span></>}.
-              </motion.p>
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </section>
+                </div>
+              </FadeIn>
+            ))
+          ) : (
+            // Empty state quando não há resultados
+            <div className="col-span-full py-20 text-center">
+              <p className="text-gray-600 text-sm">
+                {activeTech
+                  ? `Nenhum projeto com "${activeTech}" encontrado.`
+                  : "Nenhum projeto encontrado."}
+              </p>
+              {activeTech && (
+                <button
+                  onClick={() => setActiveTech(null)}
+                  className="mt-3 text-xs text-yellow-400/60 hover:text-yellow-400 transition cursor-pointer underline"
+                >
+                  Ver todos
+                </button>
+              )}
+            </div>
+          )}
+        </motion.section>
+      </AnimatePresence>
 
-      {/* SECÇÃO EXTRA */}
+      {/* SECÇÃO EXTRA (ex: ArchDiagram em /fullstack) */}
       {sectionExtra && <section className="mt-20">{sectionExtra}</section>}
 
       {/* EXPLORAR OUTRAS ÁREAS */}
@@ -269,7 +333,7 @@ export default function ProjectsLayout({
             Explorar Outras Áreas
           </h3>
           <FadeIn direction="left">
-            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto`}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
               {CATEGORIES.map((cat, i) => (
                 <FadeIn key={cat.key} delay={0.1 + i * 0.1}>
                   <BigCategoryCard cat={cat} count={countByType[cat.key] ?? 0} />
@@ -284,17 +348,18 @@ export default function ProjectsLayout({
       <section className="mt-24 max-w-3xl mx-auto">
         <FadeIn delay={0.2}>
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold mb-2">Feedback</h2>
-            <p className="text-gray-500">A tua opinião ajuda a evoluir o código.</p>
+            <h2 className="text-3xl font-bold mb-2">{fbCfg.heading}</h2>
+            <p className="text-gray-500">{fbCfg.sub}</p>
           </div>
         </FadeIn>
         <FadeIn delay={0.4}>
           <div className="bg-zinc-900/50 p-6 rounded-xl border border-yellow-500/10">
             <textarea
-              placeholder="Deixa o teu comentário..."
+              placeholder={fbCfg.placeholder}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              className="w-full p-4 bg-black/40 border border-yellow-500/10 rounded-lg mb-4 outline-none focus:border-yellow-400/50 transition-all resize-none text-white placeholder-gray-600"
+              disabled={submitState === "loading" || submitState === "success"}
+              className="w-full p-4 bg-black/40 border border-yellow-500/10 rounded-lg mb-4 outline-none focus:border-yellow-400/50 transition-all resize-none text-white placeholder-gray-600 disabled:opacity-50"
               rows="3"
             />
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -303,7 +368,8 @@ export default function ProjectsLayout({
                   <button
                     key={star}
                     onClick={() => setRating(star)}
-                    className={`text-2xl sm:text-lg transition-all cursor-pointer ${
+                    disabled={submitState === "loading" || submitState === "success"}
+                    className={`text-2xl sm:text-lg transition-all cursor-pointer disabled:pointer-events-none ${
                       star <= rating ? "text-yellow-400" : "text-gray-600 hover:text-yellow-400/50"
                     }`}
                   >
@@ -312,13 +378,21 @@ export default function ProjectsLayout({
                 ))}
               </div>
               <button
-                onClick={() => { setComment(""); setRating(0); }}
-                disabled={!comment.trim() || rating === 0}
-                className="w-full sm:w-auto px-6 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-300 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={handleFeedbackSubmit}
+                disabled={!comment.trim() || rating === 0 || submitState === "loading" || submitState === "success"}
+                className="w-full sm:w-auto px-6 py-2 bg-yellow-400 text-black font-semibold rounded-lg hover:bg-yellow-300 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed min-w-[148px]"
               >
-                Enviar Avaliação
+                {submitState === "loading" && "A enviar..."}
+                {submitState === "success" && "✓ Obrigado!"}
+                {submitState === "error"   && "Erro — tenta de novo"}
+                {submitState === "idle"    && "Enviar avaliação"}
               </button>
             </div>
+            {submitState === "error" && (
+              <p className="text-red-400 text-xs mt-3 text-right">
+                Não foi possível enviar. O backend ainda não está activo.
+              </p>
+            )}
           </div>
         </FadeIn>
       </section>
@@ -327,25 +401,23 @@ export default function ProjectsLayout({
       <section className="py-20 px-4 text-center mt-20 border-t border-yellow-500/10">
         <FadeIn>
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-6">
-            Vamos tirar essa ideia do papel?
+            {ctaCfg.heading}
           </h2>
         </FadeIn>
         <FadeIn delay={0.2}>
-          <p className="text-gray-400 mb-8 max-w-lg mx-auto">
-            Disponível para colaborar em produtos digitais modernos.
-          </p>
+          <p className="text-gray-400 mb-8 max-w-lg mx-auto">{ctaCfg.sub}</p>
         </FadeIn>
         <FadeIn delay={0.4}>
           <Link
             href="/contact"
             className="px-8 py-3 bg-yellow-400 text-black font-medium rounded-lg hover:bg-yellow-300 transition inline-block cursor-pointer"
           >
-            Entrar em contacto
+            {ctaCfg.cta}
           </Link>
         </FadeIn>
       </section>
 
-      {/* MODAL */}
+      {/* MODAL — único componente para todas as categorias */}
       <AnimatePresence>
         {selectedProject && (
           <ProjectModal

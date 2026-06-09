@@ -242,12 +242,12 @@ export default function ProjectsPage() {
       <section className="py-20 px-4 text-center mt-20 border-t border-yellow-500/10">
         <FadeIn>
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-6">
-            Vamos tirar essa ideia do papel?
+            Tens um projecto em mente?
           </h2>
         </FadeIn>
         <FadeIn delay={0.2}>
           <p className="text-gray-400 mb-8 max-w-lg mx-auto">
-            Disponível para colaborar em produtos digitais modernos.
+            Frontend, backend ou fullstack — escolhe a área e vê o que já foi construído.
           </p>
         </FadeIn>
         <FadeIn delay={0.4}>
