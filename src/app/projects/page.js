@@ -11,7 +11,7 @@ import {fetchAllProjects, getCategories } from "@/lib/Projects";
 import ProjectsPageClient from "@/components/ProjectsPage";
 
 export const metadata = {
-  title: "Projetos & Experimentos | PLG Dev",
+  title: "Projetos & Experimentos",
   description:
     "Frontend, backend e fullstack — cada projeto é um problema resolvido com código limpo e experiência cuidada.",
 };

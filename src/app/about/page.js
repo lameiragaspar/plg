@@ -3,7 +3,7 @@ import { fetchAboutStats } from "@/lib/Projects";
 import About from "@/components/AboutPage";
 
 export const metadata = {
-  title: "Sobre | PLG Dev",
+  title: "Sobre",
   description:
     "Desenvolvedor FullStack baseado em Luanda. Conheça a jornada, stack técnica e abordagem de Pedro Lameira Gaspar.",
 };
