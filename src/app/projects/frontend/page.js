@@ -1,27 +1,30 @@
-"use client";
+import ProjectsFrontPage from "@/components/ProjectsFrontPage";
+import {fetchProjectsByType, fetchAllProjects, getCategories } from "@/lib/Projects";
 
-import ProjectsLayout from "@/components/ProjectsLayout";
-import { getAllProjects, getCategories } from "@/lib/Projects";
-
-const ALL_PROJECTS = getAllProjects();
-const CATEGORIES = getCategories();
-
-const projects = ALL_PROJECTS.filter((p) => p.type === "frontend");
-const relatedCategories = CATEGORIES.filter((c) => c.key !== "frontend");
 
 // ── Página ─────────────────────────────────────────────────────────────────
 // showTechFilter={true} activa a TechFilterBar dentro de ProjectsLayout.
 // Nenhum componente local necessário — o filtro é auto-contido no layout.
-export default function FrontendProjectsPage() {
+export default async function FrontendProjectsPage() {
+  let projects = [];
+  let projectsFrontend = [];
+  let relatedCategories = [];
+  try {
+    projectsFrontend = await fetchProjectsByType("frontend");
+    projects = await fetchAllProjects();
+    relatedCategories = getCategories();
+    //console.log("Frontend projects:", projects);
+    if (projects.length > 0) {
+      relatedCategories = relatedCategories.filter((c) => c.key !== "frontend");
+    }
+  } catch (err) {
+    console.error("[FrontendProjectsPage] Erro ao buscar projetos:", err);
+  }
   return (
-    <ProjectsLayout
-      category="Frontend"
-      description="Interfaces modernas, animações e experiências focadas no utilizador. Foco total em"
-      tagline="performance e acessibilidade."
-      accentClass="text-yellow-400"
+    <ProjectsFrontPage
       projects={projects}
+      projectsFrontend={projectsFrontend}
       relatedCategories={relatedCategories}
-      showTechFilter={true}
     />
   );
 }

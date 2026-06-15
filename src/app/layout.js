@@ -1,3 +1,4 @@
+// app/layout.js
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/styles/globals.css";
 import AnimatedHeader from "@/components/AnimatedHeader";
@@ -14,27 +15,42 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: ".dev - Portfólio de Programação",
-  description: "Portfólio de programação focado em frontend, backend e fullstack. Projetos modernos, limpos e com código aberto. Explore minhas criações e colaborações.",
+  title: {
+    default: "PLG Dev — Portfólio FullStack",
+    template: "%s | PLG Dev",
+  },
+  description:
+    "Portfólio de desenvolvimento FullStack — interfaces modernas, APIs robustas e produtos de ponta a ponta. React, Next.js, Node.js e PostgreSQL.",
+  keywords: ["fullstack", "developer", "react", "nextjs", "portfolio", "angola"],
+  authors: [{ name: "Pedro Lameira Gaspar" }],
+  openGraph: {
+    type: "website",
+    locale: "pt_PT",
+    url: "https://plg-dev.vercel.app",
+    siteName: "PLG Dev",
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
+    // ── pt-PT (Português Europeu) — era "pt-br" ──────────────────────────
     <html
-      lang="pt-br"
+      lang="pt-PT"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-black text-white" suppressHydrationWarning>
-        
-        {/* Header global */}
+      <body
+        className="min-h-full flex flex-col bg-black text-white"
+        suppressHydrationWarning
+      >
         <AnimatedHeader />
 
-        {/* Conteúdo */}
-        <main className="min-h-full flex flex-col bg-gradient-to-b from-black via-gray-900 to-black text-white">
-          {children}
-        </main>
+        {/*
+          Sem <main> wrapper aqui — cada page.js define o seu próprio <main>
+          com padding e max-width adequados ao conteúdo da página.
+          Ter dois <main> aninhados (layout + page) é HTML inválido.
+        */}
+        {children}
 
-        {/* Footer global */}
         <AnimatedFooter />
       </body>
     </html>

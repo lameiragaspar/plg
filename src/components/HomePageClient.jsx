@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import FadeIn from "@/components/FadeIn";
 import { FadeItem } from "@/components/HeroAnimation";
-import { getCategories, getAllProjects } from "@/lib/Projects";
 import BigCategoryCard from "@/components/BigCategoryCard";
 
 // ── Dados de Stack ────────────────────────────────────────────────────────
@@ -87,9 +86,6 @@ const STACK = [
 ];
 
 // ── Hook: scroll reveal por proximidade ao centro do ecrã ────────────────
-// Em vez de IntersectionObserver (que dispara na entrada da viewport e causa
-// skips), calcula em cada scroll qual item tem o centro mais próximo do centro
-// visível — comportamento determinístico e sem bugs nas stacks do meio.
 function useActiveOnScroll(count) {
   const [activeIndex, setActiveIndex] = useState(0);
   const refs = useRef([]);
@@ -117,7 +113,6 @@ function useActiveOnScroll(count) {
       setActiveIndex(bestIndex);
     };
 
-    // Primeiro cálculo imediato ao montar
     recalculate();
 
     window.addEventListener("scroll", recalculate, { passive: true });
@@ -369,34 +364,37 @@ function MobileStackDetail({ stack: s }) {
 }
 
 // ── Componente: Stats rápidas no Hero ─────────────────────────────────────
-function HeroStats() {
-  const ALL_PROJECTS = getAllProjects();
+// Recebe os projectos via prop em vez de os buscar directamente (async-safe).
+function HeroStats({ projects }) {
   const stats = useMemo(() => ({
-    projects: ALL_PROJECTS.length,
-    techs: new Set(ALL_PROJECTS.flatMap((p) => p.tech ?? [])).size,
-    area: new Set(ALL_PROJECTS.map((p) => p.type ?? [])).size,
-  }), []);
+    projects: projects.length,
+    techs: new Set(projects.flatMap((p) => p.tech ?? [])).size,
+    area: new Set(projects.map((p) => p.type)).size,
+  }), [projects]);
 
   return (
     <div className="flex items-center gap-6 justify-center flex-wrap text-sm text-gray-500">
-      <span className="px-6 border-l border-r pg-6 border-gray-700"><span className="text-yellow-400 font-semibold">{stats.projects}</span> projectos</span>
-      <span className="px-6 border-l border-r border-gray-700"><span className="text-yellow-400 font-semibold">{stats.techs}</span> tecnologias</span>
-      <span className="px-6 border-l border-r border-gray-700"><span className="text-yellow-400 font-semibold">{stats.area}</span> áreas</span>
+      <span className="px-6 border-l border-r border-gray-700">
+        <span className="text-yellow-400 font-semibold">{stats.projects}</span> projectos
+      </span>
+      <span className="px-6 border-l border-r border-gray-700">
+        <span className="text-yellow-400 font-semibold">{stats.techs}</span> tecnologias
+      </span>
+      <span className="px-6 border-l border-r border-gray-700">
+        <span className="text-yellow-400 font-semibold">{stats.area}</span> áreas
+      </span>
     </div>
   );
 }
 
 // ── Página principal ──────────────────────────────────────────────────────
-export default function Home() {
-  const CATEGORIES = getCategories();
-  const ALL_PROJECTS = getAllProjects();
-
+export default function HomePageClient({ initialProjects = [], categories = [] }) {
   const countByType = useMemo(() =>
-    CATEGORIES.reduce((acc, cat) => {
-      acc[cat.key] = ALL_PROJECTS.filter((p) => p.type === cat.key).length;
+    categories.reduce((acc, cat) => {
+      acc[cat.key] = initialProjects.filter((p) => p.type === cat.key).length;
       return acc;
     }, {}),
-  []);
+  [initialProjects, categories]);
 
   return (
     <main className="text-white overflow-x-hidden">
@@ -462,7 +460,7 @@ export default function Home() {
         {/* Stats rápidas */}
         <FadeItem direction="up" delay={0.5}>
           <div className="relative z-10">
-            <HeroStats />
+            <HeroStats projects={initialProjects} />
           </div>
         </FadeItem>
       </section>
@@ -528,7 +526,7 @@ export default function Home() {
           </FadeIn>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {CATEGORIES.map((cat, i) => (
+            {categories.map((cat, i) => (
               <FadeIn key={cat.key} delay={0.1 + i * 0.1}>
                 <BigCategoryCard cat={cat} count={countByType[cat.key] ?? 0} />
               </FadeIn>

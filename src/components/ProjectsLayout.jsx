@@ -7,8 +7,42 @@ import FadeIn from "@/components/FadeIn";
 import ProjectCard from "@/components/ProjectCard";
 import ProjectModal from "@/components/ProjectModal";
 import BigCategoryCard from "@/components/BigCategoryCard";
-import { getAllProjects, getCategories } from "@/lib/Projects";
+import { getCategories } from "@/lib/Projects";
 
+import { useLikes } from "@/hooks/Uselikes";
+// ── Toast de feedback ─────────────────────────────────────────────────────
+function Toast({ state }) {
+  if (state === "idle" || state === "loading") return null;
+
+  const config = {
+    success: {
+      icon: "✓",
+      message: "Feedback enviado — obrigado!",
+      classes: "border-emerald-400/40 bg-emerald-400/10 text-emerald-400",
+    },
+    error: {
+      icon: "✕",
+      message: "Não foi possível enviar. Tenta novamente.",
+      classes: "border-red-400/40 bg-red-400/10 text-red-400",
+    },
+  }[state];
+
+  if (!config) return null;
+
+  return (
+    <motion.div
+      key={state}
+      initial={{ opacity: 0, y: 16, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0,  scale: 1     }}
+      exit={{    opacity: 0, y: 8,  scale: 0.97  }}
+      transition={{ duration: 0.25 }}
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-xl border text-sm font-medium shadow-xl backdrop-blur-sm whitespace-nowrap ${config.classes}`}
+    >
+      <span className="text-base">{config.icon}</span>
+      {config.message}
+    </motion.div>
+  );
+}
 // ── Tech Filter Bar ────────────────────────────────────────────────────────
 // Renderizado apenas em /frontend (showTechFilter={true}).
 // Isola estado e lógica — ProjectsLayout só expõe a prop booleana.
@@ -94,28 +128,31 @@ const FEEDBACK_CONFIG = {
 export default function ProjectsLayout({
   category,
   description,
-  projects       = [],
+  projects: initialProjects = [],
+  projectsByType = [],
   relatedCategories = [],
   accentClass    = "text-yellow-400",
   tagline        = "",
-  headerExtra    = null,   // UI extra no cabeçalho (ex: TerminalStatsBar, ArchDiagram)
-  renderModalExtra = null, // Slot por categoria dentro do modal (ex: EndpointViewer, SplitStack)
-  sectionExtra   = null,   // Secção completa extra após o grid (ex: ArchDiagram)
-  showTechFilter = false,  // Activar filtro por tecnologia (/frontend)
+  headerExtra    = null,
+  renderModalExtra = null,
+  sectionExtra   = null,
+  showTechFilter = false,
 }) {
-  const ALL_PROJECTS = getAllProjects();
-  const CATEGORIES   = relatedCategories.length > 0 ? relatedCategories : getCategories();
+  const CATEGORIES = relatedCategories.length > 0 ? relatedCategories : getCategories();
 
+  const [projects, setProjects] = useState(initialProjects);
+  const [projectsByTypeState, setProjectsByTypeState] = useState(projectsByType);
   const [selectedProject, setSelectedProject] = useState(null);
   const [search, setSearch]                   = useState("");
   const [showDropdown, setShowDropdown]       = useState(false);
-  const [liked, setLiked]                     = useState({});
+  const { liked, toggleLike }                 = useLikes(setProjectsByTypeState);
   const [rating, setRating]                   = useState(0);
   const [comment, setComment]                 = useState("");
 
   // — Estado interno do filtro por tech (só activo quando showTechFilter=true) —
   const [activeTech, setActiveTech] = useState(null);
   const [submitState, setSubmitState] = useState("idle"); // "idle" | "loading" | "success" | "error"
+  const [mentionedProject, setMentionedProject] = useState(null); // projecto mencionado no feedback (opcional)
 
   const fbCfg  = FEEDBACK_CONFIG[category] ?? FEEDBACK_CONFIG.default;
   const ctaCfg = CTA_CONFIG[category] ?? CTA_CONFIG.default;
@@ -130,15 +167,17 @@ export default function ProjectsLayout({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          source: category, // "Frontend" | "Backend" | "Fullstack"
+          page:       category,                   // "Frontend" | "Backend" | "Fullstack"
           rating,
-          comment: comment.trim(),
-          timestamp: new Date().toISOString(),
+          comment:    comment.trim(),
+          project_id: mentionedProject ?? null,   // opcional
+          timestamp:  new Date().toISOString(),
         }),
       });
       setSubmitState("success");
       setComment("");
       setRating(0);
+      setMentionedProject(null);
     } catch {
       setSubmitState("error");
     } finally {
@@ -148,28 +187,31 @@ export default function ProjectsLayout({
 
   // Todas as techs únicas dos projectos desta categoria, ordenadas
   const allTechs = useMemo(() => {
-    const set = new Set(projects.flatMap((p) => p.tech ?? []));
+    const set = new Set(projectsByTypeState.flatMap((p) => p.tech ?? []));
     return [...set].sort();
-  }, [projects]);
+  }, [projectsByTypeState]);
 
   // Filtragem composta: texto de busca + tech seleccionada
   const filteredProjects = useMemo(() => {
     const q = search.toLowerCase().trim();
-    let result = projects;
+    let result = projectsByTypeState;
     if (q) result = result.filter((p) => p.title.toLowerCase().includes(q));
     if (activeTech) result = result.filter((p) => p.tech?.includes(activeTech));
     return result;
-  }, [search, projects, activeTech]);
+  }, [search, projectsByTypeState, activeTech]);
 
-  const toggleLike = (id) =>
-    setLiked((prev) => ({ ...prev, [id]: !prev[id] }));
-
+  const openProject = async (project) => {
+    setSelectedProject(project);
+    
+    // Regista view em background (sem bloquear a UI)
+    fetch(`/api/projects/${project.id}/view`, { method: "POST" }).catch(() => {});
+  };
   const countByType = useMemo(() =>
     CATEGORIES.reduce((acc, cat) => {
-      acc[cat.key] = ALL_PROJECTS.filter((p) => p.type === cat.key).length;
+      acc[cat.key] = projects.filter((p) => p.type === cat.key).length;
       return acc;
     }, {}),
-  []);
+  [projects, CATEGORIES]);
 
   return (
     <main className="min-h-screen text-white px-4 sm:px-6 pt-32 md:pt-40 pb-20 max-w-6xl mx-auto">
@@ -282,11 +324,11 @@ export default function ProjectsLayout({
         >
           {filteredProjects.length > 0 ? (
             filteredProjects.map((project, i) => (
-              <FadeIn key={project.id} delay={i * 0.1}>
+              <FadeIn key={project.id} delay={i * 0.1} className="h-full">
                 <div className="relative group min-w-0 h-full">
                   <ProjectCard
                     project={project}
-                    onClick={() => setSelectedProject(project)}
+                    onClick={() => openProject(project)}
                   />
                   <button
                     onClick={(e) => { e.stopPropagation(); toggleLike(project.id); }}
@@ -296,8 +338,8 @@ export default function ProjectsLayout({
                         : "bg-black/40 border-yellow-500/20 text-gray-400 hover:border-yellow-400/50"
                     }`}
                   >
-                    {liked[project.id] ? "❤️" : "🤍"}{" "}
-                    {liked[project.id] ? (project.likes ?? 0) + 1 : project.likes ?? 0}
+                    {/**liked[project.id] ? "❤️" : "🤍"}{" "*/} 
+                    {liked[project.id] ? "❤️" : "🤍"} {project.likes ?? 0}
                   </button>
                 </div>
               </FadeIn>
@@ -354,6 +396,32 @@ export default function ProjectsLayout({
         </FadeIn>
         <FadeIn delay={0.4}>
           <div className="bg-zinc-900/50 p-6 rounded-xl border border-yellow-500/10">
+
+            {/* Menção opcional a um projecto */}
+            {projectsByTypeState.length > 0 && (
+              <div className="mb-4">
+                <p className="text-xs text-gray-500 mb-2 uppercase tracking-widest">
+                  Mencionar um projecto (opcional)
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {projectsByTypeState.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => setMentionedProject(mentionedProject === p.id ? null : p.id)}
+                      disabled={submitState === "loading" || submitState === "success"}
+                      className={`text-xs px-3 py-1.5 rounded-full border transition-all cursor-pointer disabled:pointer-events-none ${
+                        mentionedProject === p.id
+                          ? "bg-yellow-400 text-black border-yellow-400 font-semibold"
+                          : "border-yellow-500/20 text-gray-400 hover:border-yellow-400/40 hover:text-white"
+                      }`}
+                    >
+                      {mentionedProject === p.id ? "✓ " : ""}{p.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <textarea
               placeholder={fbCfg.placeholder}
               value={comment}
@@ -390,7 +458,7 @@ export default function ProjectsLayout({
             </div>
             {submitState === "error" && (
               <p className="text-red-400 text-xs mt-3 text-right">
-                Não foi possível enviar. O backend ainda não está activo.
+                Não foi possível enviar. Tenta novamente.
               </p>
             )}
           </div>
@@ -416,6 +484,11 @@ export default function ProjectsLayout({
           </Link>
         </FadeIn>
       </section>
+
+      {/* TOAST — feedback de envio */}
+      <AnimatePresence mode="wait">
+        <Toast state={submitState} />
+      </AnimatePresence>
 
       {/* MODAL — único componente para todas as categorias */}
       <AnimatePresence>

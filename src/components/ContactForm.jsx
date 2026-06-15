@@ -82,29 +82,38 @@ export default function ContactForm() {
   };
 
   const handleSubmit = useCallback(async () => {
-    if (status === "sending") return;
+  if (status === "sending") return;
 
-    const e = validate(form);
-    if (Object.keys(e).length) {
-      setErrors(e);
-      // Shake — feedback imediato de erro
-      controls.start({
-        x: [0, -8, 8, -6, 6, -3, 3, 0],
-        transition: { duration: 0.45, ease: "easeInOut" },
-      });
-      return;
-    }
+  const e = validate(form);
+  if (Object.keys(e).length) {
+    setErrors(e);
+    controls.start({
+      x: [0, -8, 8, -6, 6, -3, 3, 0],
+      transition: { duration: 0.45, ease: "easeInOut" },
+    });
+    return;
+  }
 
-    setErrors({});
-    setStatus("sending");
+  setErrors({});
+  setStatus("sending");
 
-    // ── Substituir por fetch("/api/contact", { method: "POST", body: ... })
-    //    quando o backend estiver pronto.
-    await new Promise((r) => setTimeout(r, 1400));
+  try {
+    const res = await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+
+    if (!res.ok) throw new Error(`HTTPS ${res.status}`);
 
     setStatus("sent");
     setForm({ name: "", email: "", subject: "", message: "" });
-  }, [form, status, controls]);
+  } catch (err) {
+    console.error("[ContactForm]", err);
+    setStatus("error");                          // ← mostra erro ao utilizador
+    setTimeout(() => setStatus("idle"), 4000);   // ← reset após 4s
+  }
+}, [form, status, controls]);
 
   // Atalho Ctrl / Cmd + Enter
   useEffect(() => {
@@ -232,6 +241,11 @@ export default function ContactForm() {
 
       {/* Botão + hint de atalho */}
       <div className="space-y-2">
+        {status === "error" && (
+          <p className="text-sm text-red-400 text-center py-2 px-4 rounded-lg border border-red-400/20 bg-red-400/5">
+            Não foi possível enviar. Verifica a ligação e tenta novamente.
+          </p>
+        )}
         <button
           onClick={handleSubmit}
           disabled={status === "sending"}
