@@ -52,36 +52,7 @@ function marcarAvisoComoVisto() {
   } catch {}
 }
 
-// ── Utilitário interno: aplica um updater de lista a um ou dois setters ──
-//
-// O problema que isto resolve:
-//   ProjectsLayout mantém DUAS listas separadas em estado:
-//     - listaGeral     → todos os projetos da categoria (para countByType)
-//     - listaPorTipo   → apenas os projetos do tipo exibido no grid
-//
-//   Passar o mesmo updater a dois setState distintos funciona correctamente
-//   porque o React entrega a cada um o `prev` do SEU próprio estado.
-//   O bug anterior era usar um wrapper que chamava ambos com o mesmo argumento
-//   mas sem garantir que o `prev` de cada um fosse o seu estado real —
-//   aqui isolamos cada setter na sua própria closure.
-//
-function aplicarLikeEmListas(setListaPrincipal, setListaSecundaria, updater) {
-  // Lista principal — sempre presente (ex: ProjectsPage, ProjectsLayout)
-  setListaPrincipal(updater);
-
-  // Lista secundária — só existe no ProjectsLayout (projectsByTypeState)
-  // É opcional: ProjectsPage passa undefined e nada acontece.
-  if (setListaSecundaria) {
-    setListaSecundaria(updater);
-  }
-}
-
 // ── Hook principal ────────────────────────────────────────────────────────
-//
-// Parâmetros:
-//   setListaPrincipal    setState da lista completa (obrigatório)
-//   setListaSecundaria   setState da lista filtrada por tipo (opcional)
-//                        — usado em ProjectsLayout que tem duas listas separadas
 //
 // Retorna:
 //   liked           { [projectoId]: boolean }
@@ -89,10 +60,9 @@ function aplicarLikeEmListas(setListaPrincipal, setListaSecundaria, updater) {
 //   mostrarAviso    boolean  — true apenas na 1ª curtida de toda a sessão
 //   fecharAviso     () => void
 //
-export function useLikes(setListaPrincipal, setListaSecundaria = undefined) {
-  const [liked, setLiked]               = useState({});
+export function useLikes(setProjectos) {
+  const [liked, setLiked]             = useState({});
   const [mostrarAviso, setMostrarAviso] = useState(false);
-
   // Guarda os IDs com uma requisição de like/unlike em curso.
   // Não é estado (não precisa re-render) — só serve para bloquear cliques repetidos.
   const pendentesRef = useRef(new Set());
@@ -129,19 +99,15 @@ export function useLikes(setListaPrincipal, setListaSecundaria = undefined) {
         setMostrarAviso(true);
       }
 
-      // 1. Actualização optimista — UI responde imediatamente antes da API confirmar
+      // 1. Actualização optimista — UI responde imediatamente
       setLiked((prev) => ({ ...prev, [projectoId]: !estavaCurtido }));
-
-      // Updater reutilizável: incrementa/decrementa o like do projeto em questão.
-      // Aplicado independentemente a cada lista — cada setter recebe o seu próprio `prev`.
-      const updaterOtimista = (prev) =>
-        prev.map((projeto) =>
-          projeto.id === projectoId
-            ? { ...projeto, likes: Math.max(0, (projeto.likes ?? 0) + deltaOtimista) }
-            : projeto
-        );
-
-      aplicarLikeEmListas(setListaPrincipal, setListaSecundaria, updaterOtimista);
+      setProjectos((prev) =>
+        prev.map((p) =>
+          p.id === projectoId
+            ? { ...p, likes: Math.max(0, (p.likes ?? 0) + deltaOtimista) }
+            : p
+        )
+      );
 
       try {
         // 2. Chamada à API — envia o hash do browser para deduplicação
@@ -156,17 +122,12 @@ export function useLikes(setListaPrincipal, setListaSecundaria = undefined) {
         const { liked: novoEstado, totalLikes } = await resposta.json();
 
         // 3. Reconcilia com o valor real do servidor
-        //    O totalLikes vindo da API substitui o valor optimista estimado.
         setLiked((prev) => ({ ...prev, [projectoId]: novoEstado }));
-
-        const updaterReconciliado = (prev) =>
-          prev.map((projeto) =>
-            projeto.id === projectoId
-              ? { ...projeto, likes: totalLikes }
-              : projeto
-          );
-
-        aplicarLikeEmListas(setListaPrincipal, setListaSecundaria, updaterReconciliado);
+        setProjectos((prev) =>
+          prev.map((p) =>
+            p.id === projectoId ? { ...p, likes: totalLikes } : p
+          )
+        );
 
         // 4. Persiste só após confirmação do servidor
         const idsActuais       = lerLikesLocais();
@@ -176,24 +137,22 @@ export function useLikes(setListaPrincipal, setListaSecundaria = undefined) {
         guardarLikesLocais(idsActualizados);
 
       } catch (erro) {
-        // Rollback completo se a API falhar — desfaz a actualização optimista
+        // Rollback completo se a API falhar
         console.error("[useLikes] Falha ao registar like:", erro);
         setLiked((prev) => ({ ...prev, [projectoId]: estavaCurtido }));
-
-        const updaterRollback = (prev) =>
-          prev.map((projeto) =>
-            projeto.id === projectoId
-              ? { ...projeto, likes: Math.max(0, (projeto.likes ?? 0) - deltaOtimista) }
-              : projeto
-          );
-
-        aplicarLikeEmListas(setListaPrincipal, setListaSecundaria, updaterRollback);
+        setProjectos((prev) =>
+          prev.map((p) =>
+            p.id === projectoId
+              ? { ...p, likes: Math.max(0, (p.likes ?? 0) - deltaOtimista) }
+              : p
+          )
+        );
       } finally {
         // Libera o lock — só agora um novo clique neste projeto é aceite
         pendentesRef.current.delete(projectoId);
       }
     },
-    [liked, setListaPrincipal, setListaSecundaria]
+    [liked, setProjectos]
   );
 
   return { liked, toggleLike, mostrarAviso, fecharAviso };

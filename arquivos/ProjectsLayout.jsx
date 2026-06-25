@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
@@ -12,41 +12,27 @@ import AvisoLikeBrowser from "@/components/AvisoLikeBrowser";
 
 import { useLikes } from "@/hooks/Uselikes";
 // ── Toast de feedback ─────────────────────────────────────────────────────
-//
-// CORRECÇÃO BUG 4:
-// O componente já não retorna `null` internamente.
-// Antes, quando o estado voltava a "idle", o Toast desaparecia do DOM
-// imediatamente — o AnimatePresence nunca chegava a executar a animação
-// de saída porque o filho já não existia quando tentava animá-lo.
-//
-// Agora o Toast recebe sempre um `config` válido e renderiza sempre um
-// `motion.div` real. A decisão de mostrar ou esconder é feita no nível
-// do AnimatePresence (ver uso abaixo), que monta/desmonta o componente
-// depois de a animação `exit` terminar.
-//
-const TOAST_CONFIG = {
-  success: {
-    icon: "✓",
-    message: "Feedback enviado — obrigado!",
-    classes: "border-emerald-400/40 bg-emerald-400/10 text-emerald-400",
-  },
-  error: {
-    icon: "✕",
-    message: "Não foi possível enviar. Tenta novamente.",
-    classes: "border-red-400/40 bg-red-400/10 text-red-400",
-  },
-};
+function Toast({ state }) {
+  if (state === "idle" || state === "loading") return null;
 
-function Toast({ estadoEnvio }) {
-  const config = TOAST_CONFIG[estadoEnvio];
+  const config = {
+    success: {
+      icon: "✓",
+      message: "Feedback enviado — obrigado!",
+      classes: "border-emerald-400/40 bg-emerald-400/10 text-emerald-400",
+    },
+    error: {
+      icon: "✕",
+      message: "Não foi possível enviar. Tenta novamente.",
+      classes: "border-red-400/40 bg-red-400/10 text-red-400",
+    },
+  }[state];
 
-  // Nunca deve ser chamado sem config — a guarda está no AnimatePresence.
-  // Esta verificação é apenas uma salvaguarda defensiva.
   if (!config) return null;
 
   return (
     <motion.div
-      key={estadoEnvio}
+      key={state}
       initial={{ opacity: 0, y: 16, scale: 0.97 }}
       animate={{ opacity: 1, y: 0,  scale: 1     }}
       exit={{    opacity: 0, y: 8,  scale: 0.97  }}
@@ -58,7 +44,6 @@ function Toast({ estadoEnvio }) {
     </motion.div>
   );
 }
-
 // ── Tech Filter Bar ────────────────────────────────────────────────────────
 // Renderizado apenas em /frontend (showTechFilter={true}).
 // Isola estado e lógica — ProjectsLayout só expõe a prop booleana.
@@ -162,18 +147,16 @@ export default function ProjectsLayout({
   const [search, setSearch]                   = useState("");
   const [showDropdown, setShowDropdown]       = useState(false);
 
-  // useLikes recebe dois setters separados:
-  //   setProjects         → lista geral (todos os projetos da categoria)
-  //   setProjectsByTypeState → lista do grid (só os do tipo desta página)
-  //
-  // Cada setter opera exclusivamente sobre o seu próprio estado —
-  // o React entrega a cada updater o `prev` correcto da sua lista.
-  // Isto elimina o bug anterior onde um único wrapper passava o mesmo
-  // updater a dois estados distintos, podendo sobrescrever um com o outro.
-  const { liked, toggleLike, mostrarAviso, fecharAviso } = useLikes(
-    setProjects,
-    setProjectsByTypeState
-  );
+  // useLikes só sabe falar com UM setState. Como esta página mantém duas
+  // listas separadas (projects = total da categoria, projectsByTypeState =
+  // lista filtrada exibida no grid), aplicamos o mesmo updater nas duas para
+  // que o like/unlike apareça imediatamente no grid em vez de só após refresh.
+  const setProjetosEmAmbasAsListas = useCallback((updater) => {
+    setProjects(updater);
+    setProjectsByTypeState(updater);
+  }, []);
+
+  const { liked, toggleLike, mostrarAviso, fecharAviso } = useLikes(setProjetosEmAmbasAsListas);
   const [rating, setRating]                   = useState(0);
   const [comment, setComment]                 = useState("");
 
@@ -513,16 +496,11 @@ export default function ProjectsLayout({
         </FadeIn>
       </section>
 
-      {/* TOAST — feedback de envio
-          A condição de visibilidade está AQUI, não dentro do Toast.
-          Assim o AnimatePresence detecta a saída do filho e executa
-          a animação `exit` antes de o remover do DOM.
-          "idle" e "loading" não têm config — o Toast não é montado. */}
+      {/* TOAST — feedback de envio */}
       <AnimatePresence mode="wait">
-        {(submitState === "success" || submitState === "error") && (
-          <Toast estadoEnvio={submitState} />
-        )}
+        <Toast state={submitState} />
       </AnimatePresence>
+
       {/* MODAL — único componente para todas as categorias */}
       <AnimatePresence>
         {selectedProject && (

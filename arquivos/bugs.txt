@@ -1,0 +1,27 @@
+Bugs Restantes
+🔴 BUG 3 — setProjetosEmAmbasAsListas passa o mesmo updater para dois estados diferentes
+Arquivo: ProjectsLayout.jsx, linha 154–157
+projects e projectsByTypeState são listas com conteúdos distintos — a primeira tem todos os projetos da categoria, a segunda só os da subcategoria exibida no grid. Quando o useLikes chama o updater (ex: .map((p) => ...)), ele aplica o mesmo prev às duas. Só que o prev do segundo setState já não é o prev real de projectsByTypeState — é o valor capturado no momento da chamada, que pode estar desatualizado se os dois estados não estiverem sincronizados. O resultado é que um like pode corromper a lista projects substituindo-a pelo conteúdo de projectsByTypeState.
+
+🔴 BUG 4 — AnimatePresence não consegue animar a saída do Toast
+Arquivo: ProjectsLayout.jsx, linhas 499–502
+O componente Toast retorna null directamente quando o estado é "idle" ou "loading". O AnimatePresence precisa que o elemento exista no DOM com um key estável para conseguir animar a saída — quando o componente retorna null, ele simplesmente desaparece sem animação. A saída do toast nunca é animada.
+
+🟡 BUG 7 — useActiveOnScroll usa count como dependência mas refs é um useRef não reativo
+Arquivo: HomePageClient.jsx, linhas 89–127
+O useEffect dentro do hook declara [count] como dependência. count é STACK.length, que é uma constante — nunca muda. O problema real é que refs.current é mutado directamente (linha 236: refs.current[i] = el) mas não dispara re-render nem re-execução do efeito. Se os elementos da lista forem remontados (ex: em StrictMode ou após hydration), o efeito de scroll não recalibra os refs. Isso provoca que o scroll reveal fique a ler elementos desmontados e possa calcular posições erradas.
+
+🟡 BUG 8 — countByType em ProjectsLayout calcula sobre projects mas CATEGORIES já está filtrada
+Arquivo: ProjectsLayout.jsx, linhas 220–225
+CATEGORIES é filtrada para remover a categoria actual (ex: na página /frontend, não mostra o card de "Frontend"). O countByType itera sobre essa lista filtrada e acumula contagens correctas. Mas o useMemo declara [projects, CATEGORIES] como dependências — CATEGORIES é uma variável local derivada de uma prop, não um estado reactivo. Se relatedCategories mudar entre renders, CATEGORIES muda mas o useMemo pode não recalcular porque o React não detecta a mudança na referência da variável local.
+
+🟡 BUG 9 — FadeIn não propaga className para contextos de grid CSS
+Arquivo: FadeIn.jsx, linha 21
+O FadeIn aplica o className recebido directamente ao motion.div que ele renderiza — isso é tecnicamente correcto. O problema é que quando é usado dentro de um elemento grid com col-span, o motion.div do FadeIn introduz um wrapper extra entre o grid container e o elemento que deveria ocupar as colunas. Classes como lg:col-span-3 precisam estar no filho directo do grid, não num neto. Qualquer uso de <FadeIn className="lg:col-span-3"> não vai funcionar.
+
+🟢 BUG 10 — Variáveis sem semântica em vários arquivos
+Arquivos: ProjectsLayout.jsx, HomePageClient.jsx, ProjectsPage.jsx, ProjectModal.jsx
+Persistem nomes como s (item de stack), cfg (configuração de tipo), fbCfg, ctaCfg, p (projeto em .map), el (elemento DOM em refs), i (índice em múltiplos contextos simultâneos). Não causam crash mas dificultam manutenção.
+
+Resumo
+#SeveridadeArquivoDescrição curta3🔴 CríticoProjectsLayout.jsxUpdater único corrompendo duas listas distintas4🔴 CríticoProjectsLayout.jsxToast sem animação de saída por retornar null7🟡 MédioHomePageClient.jsxuseRef não reativo como dependência de scroll8🟡 MédioProjectsLayout.jsxuseMemo com dependência de variável local não reativa9🟡 MédioFadeIn.jsxWrapper extra quebra col-span em grids10🟢 BaixoVáriosNomes de variáveis sem semântica
