@@ -7,7 +7,7 @@ import FadeIn from "@/components/FadeIn";
 import ProjectCard from "@/components/ProjectCard";
 import ProjectModal from "@/components/ProjectModal";
 import BigCategoryCard from "@/components/BigCategoryCard";
-import { getCategories } from "@/lib/Projects";
+import { getCategories } from "@/lib/categories";
 import AvisoLikeBrowser from "@/components/AvisoLikeBrowser";
 
 import { useLikes } from "@/hooks/Uselikes";

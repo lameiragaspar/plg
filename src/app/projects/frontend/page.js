@@ -1,22 +1,19 @@
+// app/projects/frontend/page.js
 import ProjectsFrontPage from "@/components/ProjectsFrontPage";
-import {fetchProjectsByType, fetchAllProjects, getCategories } from "@/lib/Projects";
+import { fetchProjectsByType, fetchAllProjects, getCategories } from "@/lib/Projects";
 
+export const dynamic = "force-dynamic";
 
-// ── Página ─────────────────────────────────────────────────────────────────
-// showTechFilter={true} activa a TechFilterBar dentro de ProjectsLayout.
-// Nenhum componente local necessário — o filtro é auto-contido no layout.
 export default async function FrontendProjectsPage() {
   let projects = [];
   let projectsFrontend = [];
   let relatedCategories = [];
   try {
-    projectsFrontend = await fetchProjectsByType("frontend");
-    projects = await fetchAllProjects();
-    relatedCategories = getCategories();
-    //console.log("Frontend projects:", projects);
-    if (projects.length > 0) {
-      relatedCategories = relatedCategories.filter((c) => c.key !== "frontend");
-    }
+    [projectsFrontend, projects] = await Promise.all([
+      fetchProjectsByType("frontend"),
+      fetchAllProjects(),
+    ]);
+    relatedCategories = getCategories().filter((c) => c.key !== "frontend");
   } catch (err) {
     console.error("[FrontendProjectsPage] Erro ao buscar projetos:", err);
   }

@@ -1,21 +1,20 @@
-import ProjectsLayout from "@/components/ProjectsLayout";
+// app/projects/backend/page.js
 import ProjectsBackPage from "@/components/ProjectsBackPage";
-import {fetchProjectsByType, fetchAllProjects, getCategories } from "@/lib/Projects";
+import { fetchProjectsByType, fetchAllProjects, getCategories } from "@/lib/Projects";
 
+export const dynamic = "force-dynamic";
 
-// ── Página ─────────────────────────────────────────────────────────────────
 export default async function BackendProjectsPage() {
   let projects = [];
   let projectsBackend = [];
   let relatedCategories = [];
   try {
-    projectsBackend = await fetchProjectsByType("backend");
-    projects = await fetchAllProjects();
-    relatedCategories = getCategories();
-    if(projects.length > 0) {
-      relatedCategories = relatedCategories.filter((c) => c.key !== "backend");
-    }
-  }catch (err) {
+    [projectsBackend, projects] = await Promise.all([
+      fetchProjectsByType("backend"),
+      fetchAllProjects(),
+    ]);
+    relatedCategories = getCategories().filter((c) => c.key !== "backend");
+  } catch (err) {
     console.error("[BackendProjectsPage] Erro ao buscar projetos:", err);
   }
   return (
