@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "@/styles/globals.css";
 import AnimatedHeader from "@/components/AnimatedHeader";
 import AnimatedFooter from "@/components/AnimatedFooter";
+import { Analytics } from "@vercel/analytics/next"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -52,6 +53,7 @@ export default function RootLayout({ children }) {
         {children}
 
         <AnimatedFooter />
+        <Analytics />
       </body>
     </html>
   );
