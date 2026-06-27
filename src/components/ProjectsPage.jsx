@@ -13,11 +13,11 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
-import ProjectCard from "@/components/ProjectCard";
-import ProjectModal from "@/components/ProjectModal";
+import ProjectCard from "@/components/projects/ProjectCard";
+import ProjectModal from "@/components/projects/ProjectModal";
 import BigCategoryCard from "@/components/BigCategoryCard";
 import { useLikes } from "@/hooks/Uselikes";
-import AvisoLikeBrowser from "@/components/AvisoLikeBrowser";
+import AvisoLikeBrowser from "@/components/projects/AvisoLikeBrowser";
 
 const FILTER_OPTIONS = ["todos", "frontend", "backend", "fullstack"];
 

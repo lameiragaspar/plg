@@ -10,7 +10,7 @@
 import "server-only";
 
 import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
-import { getCategories } from "@/lib/categories";
+import { getCategories } from "@/lib/constants/categories";
 
 // Re-exporta getCategories para não quebrar imports existentes nos Server Components
 export { getCategories };
