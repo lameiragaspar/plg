@@ -24,6 +24,11 @@ export const metadata = {
     "Portfólio de desenvolvimento FullStack — interfaces modernas, APIs robustas e produtos de ponta a ponta. React, Next.js, Node.js e PostgreSQL.",
   keywords: ["fullstack", "developer", "react", "nextjs", "portfolio", "angola"],
   authors: [{ name: "Pedro Lameira Gaspar" }],
+  // ── Força o browser a usar o esquema escuro ANTES de qualquer CSS carregar.
+  // Sem isto, dispositivos com "Light Mode" activado mostram um flash branco
+  // (ou ficam permanentemente brancos) porque o browser aplica os seus próprios
+  // estilos base antes de o Tailwind terminar de hidratear.
+  colorScheme: "dark",
   openGraph: {
     type: "website",
     locale: "pt_PT",
@@ -34,11 +39,23 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    // ── pt-PT (Português Europeu) — era "pt-br" ──────────────────────────
     <html
       lang="pt-PT"
+      // style="color-scheme: dark" — impede que o browser sobrescreva
+      // bg-black com o seu fundo padrão do sistema (branco em Light Mode).
+      // O className mantém as variáveis de fonte e o antialiasing.
+      style={{ colorScheme: "dark" }}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        {/*
+          <meta name="color-scheme"> é lido pelo browser ANTES do CSS.
+          Garante que o fundo inicial (antes de qualquer folha de estilo
+          carregar) já é preto — elimina o flash branco em dispositivos
+          com Light Mode, incluindo em mobile e PWA instaladas.
+        */}
+        <meta name="color-scheme" content="dark" />
+      </head>
       <body
         className="min-h-full flex flex-col bg-black text-white"
         suppressHydrationWarning

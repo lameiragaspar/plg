@@ -1,12 +1,10 @@
 @import "tailwindcss";
 
-/* globals.css */
 :root {
+  color-scheme: dark;
   --header-height: 200px;
-}
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #000000;
+  --foreground: #ffffff;
 }
 
 @theme inline {
@@ -16,15 +14,34 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(250, 204, 21, 0.2); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(250, 204, 21, 0.4); }
+* { scrollbar-width: thin; scrollbar-color: rgba(250, 204, 21, 0.2) transparent; }
+
+/* Seleção de texto */
+::selection {
+  background-color: rgba(250, 204, 21, 0.3);
+  color: #ffffff;
+}
+
+/* Autofill — mascara o fundo amarelo do browser */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff;
+  -webkit-box-shadow: 0 0 0px 1000px #18181b inset;
+  transition: background-color 5000s ease-in-out 0s;
 }
