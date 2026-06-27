@@ -5,6 +5,7 @@ import Link from "next/link";
 import FadeIn from "@/components/FadeIn";
 import { FadeItem } from "@/components/HeroAnimation";
 import BigCategoryCard from "@/components/BigCategoryCard";
+import HeroStats from "@/components/Herostats";
 
 // ── Dados de Stack ────────────────────────────────────────────────────────
 const STACK = [
@@ -363,30 +364,6 @@ function MobileStackDetail({ stack: s }) {
   );
 }
 
-// ── Componente: Stats rápidas no Hero ─────────────────────────────────────
-// Recebe os projectos via prop em vez de os buscar directamente (async-safe).
-function HeroStats({ projects }) {
-  const stats = useMemo(() => ({
-    projects: projects.length,
-    techs: new Set(projects.flatMap((p) => p.tech ?? [])).size,
-    area: new Set(projects.map((p) => p.type)).size,
-  }), [projects]);
-
-  return (
-    <div className="flex items-center gap-6 justify-center flex-wrap text-sm text-gray-500">
-      <span className="px-6 border-l border-r border-gray-700">
-        <span className="text-yellow-400 font-semibold">{stats.projects}</span> projectos
-      </span>
-      <span className="px-6 border-l border-r border-gray-700">
-        <span className="text-yellow-400 font-semibold">{stats.techs}</span> tecnologias
-      </span>
-      <span className="px-6 border-l border-r border-gray-700">
-        <span className="text-yellow-400 font-semibold">{stats.area}</span> áreas
-      </span>
-    </div>
-  );
-}
-
 // ── Página principal ──────────────────────────────────────────────────────
 export default function HomePageClient({ initialProjects = [], categories = [] }) {
   const countByType = useMemo(() =>
@@ -400,7 +377,7 @@ export default function HomePageClient({ initialProjects = [], categories = [] }
     <main className="text-white overflow-x-hidden">
 
       {/* ── HERO ──────────────────────────────────────────────────────── */}
-      <section className="relative flex flex-col items-center text-center px-6 mx-auto max-w-5xl min-h-[clamp(540px,calc(100vh-90px),860px)] justify-center pt-20 pb-16 gap-7">
+      <section className="relative flex flex-col items-center text-center px-6 mx-auto max-w-5xl min-h-[clamp(540px,calc(100vh-90px),860px)] justify-center pt-26 pb-16 gap-7">
 
         {/* Fundo: grid sutil */}
         <div
@@ -414,16 +391,16 @@ export default function HomePageClient({ initialProjects = [], categories = [] }
         {/* Glow central */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-yellow-400/5 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Badge de disponibilidade */}
+        {/* Badge de disponibilidade 
         <FadeItem direction="down" delay={0}>
           <div className="relative z-10 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-green-400/25 bg-green-400/8 text-green-400 text-xs font-medium">
             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
             Disponível para novos projectos
           </div>
         </FadeItem>
-
+        */}
         {/* Título */}
-        <FadeItem direction="down" delay={0.1}>
+        <FadeItem direction="down" delay={0}>
           <h1 className="relative z-10 text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.1] tracking-tight max-w-3xl">
             Transformo ideias em{" "}
             <span className="text-yellow-400">experiências web</span>{" "}
@@ -439,24 +416,6 @@ export default function HomePageClient({ initialProjects = [], categories = [] }
           </p>
         </FadeItem>
 
-        {/* CTAs */}
-        <FadeItem direction="up" delay={0.35}>
-          <div className="relative z-10 flex flex-wrap gap-3 justify-center">
-            <Link
-              href="/projects"
-              className="px-6 py-3 sm:min-w-[180px] text-center bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-all duration-200 hover:scale-105 active:scale-95"
-            >
-              Ver projectos
-            </Link>
-            <Link
-              href="/contact"
-              className="px-6 py-3 sm:min-w-[180px] text-center border border-yellow-400/40 text-yellow-400 rounded-xl hover:bg-yellow-400/10 transition-all duration-200"
-            >
-              Entrar em contacto
-            </Link>
-          </div>
-        </FadeItem>
-
         {/* Stats rápidas */}
         <FadeItem direction="up" delay={0.5}>
           <div className="relative z-10">
@@ -464,6 +423,24 @@ export default function HomePageClient({ initialProjects = [], categories = [] }
           </div>
         </FadeItem>
       </section>
+
+      {/* CTAs */}
+      <FadeItem direction="up" delay={0.35}>
+        <div className="relative z-10 flex flex-wrap gap-3 justify-center">
+          <Link
+            href="/projects"
+            className="px-6 py-3 sm:min-w-[180px] text-center bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-all duration-200 hover:scale-105 active:scale-95"
+          >
+            Ver projectos
+          </Link>
+          <Link
+            href="/contact"
+            className="px-6 py-3 sm:min-w-[180px] text-center border border-yellow-400/40 text-yellow-400 rounded-xl hover:bg-yellow-400/10 transition-all duration-200"
+          >
+            Entrar em contacto
+          </Link>
+        </div>
+      </FadeItem>
 
       {/* ── PROPOSTA DE VALOR ─────────────────────────────────────────── */}
       <section className="py-24 px-6 max-w-6xl mx-auto">

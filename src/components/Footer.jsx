@@ -14,6 +14,12 @@ const PROJECT_LINKS = [
   { label: "Fullstack", href: "/projects/fullstack" },
 ];
 
+const TECHS = [
+  { label: "Next.js",    href: "https://nextjs.org/" },
+  { label: "Tailwind",   href: "https://tailwindcss.com/" },
+  { label: "PostgreSQL", href: "https://www.postgresql.org/" },
+];
+
 const SOCIALS = [
   {
     label: "GitHub",
@@ -133,8 +139,18 @@ export default function Footer() {
           </p>
           <div className="flex items-center gap-2 text-[11px] text-gray-700">
             Feito com
-            <span className="px-1.5 py-0.5 rounded border border-yellow-500/10 font-mono text-[10px] text-gray-600">Next.js</span>
-            <span className="px-1.5 py-0.5 rounded border border-yellow-500/10 font-mono text-[10px] text-gray-600">Tailwind</span>
+            {TECHS.map((tech, index) => (
+              <span key={tech.href} className="px-1.5 py-0.5 rounded border border-yellow-500/10 font-mono text-[10px] text-gray-600">
+                <Link
+                  href={tech.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-yellow-400 transition-colors"
+                >
+                  {tech.label}
+                </Link>
+              </span>
+            ))}
           </div>
         </div>
 

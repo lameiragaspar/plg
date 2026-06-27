@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import { FadeItem } from "@/components/HeroAnimation";
+import { useState, useEffect, useRef } from "react";
 
 // ── Dados ──────────────────────────────────────────────────────────────────
 const TIMELINE = [
@@ -81,15 +81,45 @@ const FOCUS_NOW = [
   },
 ];
 
+function useCountUp(target, duration = 900, delay = 0) {
+  const [value, setValue] = useState(0);
+  const ref = useRef(null);
+  const hasRun = useRef(false);
+
+  useEffect(() => { hasRun.current = false; setValue(0); }, [target]);
+
+  useEffect(() => {
+    if (target === null) return;
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting || hasRun.current) return;
+      hasRun.current = true;
+      setTimeout(() => {
+        const start = performance.now();
+        const tick = (now) => {
+          const p = Math.min((now - start) / duration, 1);
+          setValue(Math.round((1 - Math.pow(1 - p, 3)) * target));
+          if (p < 1) requestAnimationFrame(tick); else setValue(target);
+        };
+        requestAnimationFrame(tick);
+      }, delay);
+    }, { threshold: 0.6 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [target, duration, delay]);
+
+  return { value, ref };
+}
+
 function buildStats(initialStats) {
-  const yearStart = 2022;
-  const yearsLearning = new Date().getFullYear() - yearStart;
+  const yearsLearning = new Date().getFullYear() - 2022;
 
   return [
-    { value: `${yearsLearning}+`, label: "Anos a aprender" },
-    { value: `${initialStats.projects}`,  label: "Projectos publicados" },
-    { value: `${initialStats.techs}`,     label: "Tecnologias únicas" },
-    { value: "∞",                         label: "Bugs corrigidos" },
+    { numeric: yearsLearning, suffix: "+", eyebrow: "jornada",     label: "anos a aprender"       },
+    { numeric: initialStats.projects,       eyebrow: "portfólio",   label: "projectos construídos" },
+    { numeric: initialStats.techs,          eyebrow: "stack",       label: "stacks exploradas"     },
+    { numeric: null, display: "∞",          eyebrow: "experiência", label: "bugs corrigidos"       },
   ];
 }
 
@@ -171,17 +201,35 @@ function AvatarBlock() {
   );
 }
 
-function StatPills({STATS}) {
+function StatPill({ item, delay }) {
+  const { value, ref } = useCountUp(item.numeric, 900, delay);
+  const display = item.numeric !== null && item.numeric !== undefined
+    ? `${value}${item.suffix ?? ""}`
+    : item.display;
+
+  return (
+    <div
+      ref={ref}
+      className="group flex flex-col items-center px-6 py-4 rounded-xl border border-yellow-500/10 hover:border-yellow-400/30 bg-zinc-900/50 transition-all duration-300 min-w-[190px] cursor-default"
+    >
+      <span className="text-[10px] uppercase tracking-[0.16em] text-zinc-600 font-mono mb-1.5 select-none">
+        {item.eyebrow}
+      </span>
+      <span className="text-2xl font-bold text-yellow-400 tabular-nums group-hover:text-yellow-300 transition-colors duration-300 select-none">
+        {display}
+      </span>
+      <span className="text-xs text-gray-500 mt-1 tracking-wide text-center select-none">
+        {item.label}
+      </span>
+    </div>
+  );
+}
+
+function StatPills({ STATS }) {
   return (
     <div className="flex flex-wrap justify-center gap-3 mt-10">
-      {STATS.map((s) => (
-        <div
-          key={s.label}
-          className="flex flex-col items-center px-6 py-4 rounded-xl border border-yellow-500/10 hover:border-yellow-400/30 bg-zinc-900/50 transition min-w-[110px]"
-        >
-          <span className="text-2xl font-bold text-yellow-400 tabular-nums">{s.value}</span>
-          <span className="text-xs text-gray-500 mt-0.5 uppercase tracking-wider text-center">{s.label}</span>
-        </div>
+      {STATS.map((item, i) => (
+        <StatPill key={item.label} item={item} delay={i * 100} />
       ))}
     </div>
   );

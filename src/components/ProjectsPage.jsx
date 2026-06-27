@@ -69,12 +69,17 @@ function useCountUp(target, duration = 1200) {
 }
 
 // ── StatItem ──────────────────────────────────────────────────────────────
-function StatItem({ label, target }) {
+function StatItem({ eyebrow, label, target }) {
   const { value, ref } = useCountUp(target);
   return (
-    <div ref={ref} className="text-center px-8 py-5 rounded-2xl border border-yellow-500/10 hover:border-yellow-400/30 transition-all duration-300 min-w-[150px]">
-      <p className="text-3xl font-bold text-yellow-400 tabular-nums">{value}</p>
-      <p className="text-xs text-gray-500 uppercase tracking-widest mt-1">{label}</p>
+    <div ref={ref} className="group text-center px-8 py-5 rounded-2xl border border-yellow-500/10 hover:border-yellow-400/30 transition-all duration-300 min-w-[190px] cursor-default">
+      <p className="text-[10px] uppercase tracking-[0.16em] text-zinc-600 font-mono mb-2 select-none">
+        {eyebrow}
+      </p>
+      <p className="text-3xl font-bold text-yellow-400 tabular-nums group-hover:text-yellow-300 transition-colors duration-300 select-none">
+        {value}
+      </p>
+      <p className="text-xs text-gray-500 tracking-wide mt-1 select-none">{label}</p>
     </div>
   );
 }
@@ -82,9 +87,9 @@ function StatItem({ label, target }) {
 function StatsBar({ stats }) {
   return (
     <div className="flex flex-wrap justify-center gap-4 mb-16">
-      <StatItem label="Projetos"    target={stats.total} />
-      <StatItem label="Tecnologias" target={stats.techs} />
-      <StatItem label="Likes"       target={stats.likes} />
+      <StatItem eyebrow="portfólio"  label="projectos publicados"  target={stats.total} />
+      <StatItem eyebrow="stack"      label="tecnologias no total"  target={stats.techs} />
+      <StatItem eyebrow="comunidade" label="likes recebidos"       target={stats.likes} />
     </div>
   );
 }
