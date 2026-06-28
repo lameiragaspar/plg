@@ -4,7 +4,7 @@ import { FadeItem } from "@/components/HeroAnimation";
 export default function HeroCtas() {
   return (
     <FadeItem direction="up" delay={0.35}>
-      <div className="relative z-10 flex flex-wrap gap-3 justify-center">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
         <Link
           href="/projects"
           className="px-6 py-3 sm:min-w-[180px] text-center bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition-all duration-200 hover:scale-105 active:scale-95"
