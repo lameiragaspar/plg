@@ -18,7 +18,7 @@ export default function ProjectsCTA({ ctaCfg }) {
       <FadeIn delay={0.4}>
         <Link
           href="/contact"
-          className="px-8 py-3 bg-yellow-400 text-black font-medium rounded-lg hover:bg-yellow-300 transition inline-block cursor-pointer"
+          className="px-8 py-3 bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 transition w-full sm:w-auto text-center"
         >
           {ctaCfg.cta}
         </Link>

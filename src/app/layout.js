@@ -28,13 +28,16 @@ export const metadata = {
   // Sem isto, dispositivos com "Light Mode" activado mostram um flash branco
   // (ou ficam permanentemente brancos) porque o browser aplica os seus próprios
   // estilos base antes de o Tailwind terminar de hidratear.
-  colorScheme: "dark",
   openGraph: {
     type: "website",
     locale: "pt_PT",
     url: "https://plg-dev.vercel.app",
     siteName: "PLG Dev",
   },
+};
+
+export const viewport = {
+  colorScheme: "dark",  
 };
 
 export default function RootLayout({ children }) {
