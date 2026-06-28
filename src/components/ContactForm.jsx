@@ -81,12 +81,13 @@ export default function ContactForm() {
     return e;
   };
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = useCallback(async (e) => {
+  e?.preventDefault();
   if (status === "sending") return;
 
-  const e = validate(form);
-  if (Object.keys(e).length) {
-    setErrors(e);
+  const errs = validate(form);
+  if (Object.keys(errs).length) {
+    setErrors(errs);
     controls.start({
       x: [0, -8, 8, -6, 6, -3, 3, 0],
       transition: { duration: 0.45, ease: "easeInOut" },
@@ -165,7 +166,8 @@ export default function ContactForm() {
 
   // ── Formulário ────────────────────────────────────────────────────────────
   return (
-    <motion.div animate={controls} className="space-y-5">
+    <motion.div animate={controls}>
+    <form onSubmit={handleSubmit} noValidate className="space-y-5">
 
       {/* Nome + Email */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -247,7 +249,7 @@ export default function ContactForm() {
           </p>
         )}
         <button
-          onClick={handleSubmit}
+          type="submit"
           disabled={status === "sending"}
           className="w-full py-3.5 bg-yellow-400 text-black font-semibold rounded-xl hover:bg-yellow-300 active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
@@ -269,6 +271,7 @@ export default function ContactForm() {
         </p>
       </div>
 
+    </form>
     </motion.div>
   );
 }

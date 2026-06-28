@@ -56,7 +56,7 @@ export default function ProjectsLayout({
   const [comment, setComment]                 = useState("");
   const [activeTech, setActiveTech]           = useState(null);
   const [submitState, setSubmitState]         = useState("idle"); // "idle" | "loading" | "success" | "error"
-  const [mentionedProject, setMentionedProject] = useState(null); // projecto mencionado no feedback (opcional)
+  const [mentionedProject, setMentionedProject] = useState(null);
 
   const fbCfg  = FEEDBACK_CONFIG[category] ?? FEEDBACK_CONFIG.default;
   const ctaCfg = CTA_CONFIG[category]      ?? CTA_CONFIG.default;
@@ -65,16 +65,14 @@ export default function ProjectsLayout({
     if (!comment.trim() || rating === 0) return;
     setSubmitState("loading");
     try {
-      // Quando o backend estiver pronto, esta rota já recebe tudo o que precisa:
-      // source (página de origem), rating, comment e timestamp.
       await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          page:       category,                   // "Frontend" | "Backend" | "Fullstack"
+          page:       category,
           rating,
           comment:    comment.trim(),
-          project_id: mentionedProject ?? null,   // opcional
+          project_id: mentionedProject ?? null,
           timestamp:  new Date().toISOString(),
         }),
       });
@@ -89,13 +87,11 @@ export default function ProjectsLayout({
     }
   };
 
-  // Todas as techs únicas dos projectos desta categoria, ordenadas
   const allTechs = useMemo(() => {
     const set = new Set(projectsByTypeState.flatMap((p) => p.tech ?? []));
     return [...set].sort();
   }, [projectsByTypeState]);
 
-  // Filtragem composta: texto de busca + tech seleccionada
   const filteredProjects = useMemo(() => {
     const q = search.toLowerCase().trim();
     let result = projectsByTypeState;
@@ -106,7 +102,6 @@ export default function ProjectsLayout({
 
   const openProject = async (project) => {
     setSelectedProject(project);
-    // Regista view em background (sem bloquear a UI)
     fetch(`/api/projects/${project.id}/view`, { method: "POST" }).catch(() => {});
   };
 
@@ -145,6 +140,7 @@ export default function ProjectsLayout({
         filteredProjects={filteredProjects}
       />
 
+      {/* PATCH — category passado para o grid para seleccionar a animação correcta */}
       <ProjectsGrid
         filteredProjects={filteredProjects}
         activeTech={activeTech}
@@ -153,6 +149,7 @@ export default function ProjectsLayout({
         onOpenProject={openProject}
         onToggleLike={toggleLike}
         onClearTech={() => setActiveTech(null)}
+        category={category}
       />
 
       {/* SECÇÃO EXTRA (ex: ArchDiagram em /fullstack) */}

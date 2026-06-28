@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# PLG Dev — Portfólio FullStack
 
-## Getting Started
+Portfolio pessoal construído com Next.js 16 (App Router), React 19 e Tailwind CSS v4. Inclui um backend real com Supabase — likes, views e mensagens de contacto são persistidos numa base de dados PostgreSQL.
 
-First, run the development server:
+Live: [plgdev.vercel.app](https://plg-dev.vercel.app)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## Stack
+
+ Camada      |   Tecnologia 
+
+ Framework       Next.js 16.2 (App Router) 
+ UI              React 19, Tailwind CSS 4, Framer Motion 12 
+ Base de dados   Supabase (PostgreSQL) 
+ Deploy          Vercel 
+ Analytics       Vercel Analytics 
+
+---
+
+## Estrutura
+
+```
+app/
+├── page.js                  # Home — Server Component
+├── about/page.js
+├── contact/page.js
+├── projects/
+│   ├── page.js              # Listagem geral
+│   ├── frontend/page.js
+│   ├── backend/page.js
+│   └── fullstack/page.js
+└── api/
+    ├── projects/route.js
+    ├── projects/[id]/like/route.js
+    ├── projects/[id]/view/route.js
+    ├── feedback/route.js
+    └── contact/route.js
+
+components/
+├── home/                    # Secções da homepage
+├── projects/                # Cards, modal, grid, filtros
+└── [shared]                 # Header, Footer, FadeIn, etc.
+
+lib/
+├── Projects.js              # Data layer (server-only)
+├── supabase-admin.js        # Cliente com service key
+├── supabase.js              # Cliente público
+└── constants/               # Config estática (categories, stack, etc.)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Funcionalidades
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Likes** com optimistic UI — toggle persistido no Supabase com deduplicação por visitor hash
+- **Views** contabilizadas uma vez por IP/dia via hash SHA-256
+- **Formulário de contacto** com validação e persistência na DB
+- **Feedback por página** de projectos com rating e menção opcional a projecto
+- **Dark mode forçado** — sem flash em dispositivos com Light Mode activo
+- **Animações** com Framer Motion e IntersectionObserver para count-up
+- Filtros por tecnologia e pesquisa em tempo real nas páginas de projectos
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Desenvolvimento local
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# Instalar dependências
+npm install
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Configurar variáveis de ambiente
+cp .env.example .env.local
+# preencher NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY e SUPABASE_SECRET_KEY
 
-## Deploy on Vercel
+# Iniciar o servidor de desenvolvimento
+npm run dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Abrir [http://localhost:3000](http://localhost:3000).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## Base de dados
+
+O schema está documentado em `DB.md`. As tabelas principais são `projects`, `technologies`, `project_technologies`, `project_likes`, `project_views`, `feedback` e `contact_messages`.
+
+As RPCs `adjust_likes` e `adjust_views` garantem actualizações atómicas dos contadores desnormalizados em `projects`.
+
+---
+
+## Deploy
+
+O projecto está configurado para Vercel com `force-dynamic` nas rotas de dados. As variáveis de ambiente são definidas no dashboard da Vercel.
+
+```bash-
+npm run build   # verifica erros antes de fazer push
+```

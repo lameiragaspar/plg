@@ -16,6 +16,7 @@ import FadeIn from "@/components/FadeIn";
 import ProjectCard from "@/components/projects/ProjectCard";
 import ProjectModal from "@/components/projects/ProjectModal";
 import BigCategoryCard from "@/components/BigCategoryCard";
+import EmptyState from "@/components/projects/EmptyState";
 import { useLikes } from "@/hooks/Uselikes";
 import AvisoLikeBrowser from "@/components/projects/AvisoLikeBrowser";
 
@@ -96,12 +97,10 @@ function StatsBar({ stats }) {
 
 // ── Componente principal ──────────────────────────────────────────────────
 export default function ProjectsPageClient({ initialProjects = [], categories = [] }) {
-  // Estado local derivado dos dados do servidor — nunca é uma Promise
-  const [projects, setProjects]         = useState(initialProjects);
+  const [projects, setProjects]               = useState(initialProjects);
   const [selectedProject, setSelectedProject] = useState(null);
-  const [activeFilter, setActiveFilter] = useState("todos");
+  const [activeFilter, setActiveFilter]       = useState("todos");
   const { liked, toggleLike, mostrarAviso, fecharAviso } = useLikes(setProjects);
-  
 
   const stats = useMemo(() => computeStats(projects), [projects]);
 
@@ -120,9 +119,13 @@ export default function ProjectsPageClient({ initialProjects = [], categories = 
   // ── Abrir modal + registar view ───────────────────────────────────────
   const openProject = (project) => {
     setSelectedProject(project);
-    // Fire-and-forget — não bloqueia a UI
     fetch(`/api/projects/${project.id}/view`, { method: "POST" }).catch(() => {});
   };
+
+  // ── Mensagem do empty state contextual ao filtro activo ───────────────
+  const mensagemVazia = activeFilter === "todos"
+    ? "Nenhum projeto disponível de momento."
+    : `Nenhum projeto de ${activeFilter} de momento.`;
 
   // ── Render ────────────────────────────────────────────────────────────
   return (
@@ -224,7 +227,6 @@ export default function ProjectsPageClient({ initialProjects = [], categories = 
                     project={project}
                     onClick={() => openProject(project)}
                   />
-                  {/* Botão de like — fora do card para não propagar o click */}
                   <button
                     onClick={(e) => { e.stopPropagation(); toggleLike(project.id); }}
                     aria-label={liked[project.id] ? "Remover like" : "Dar like"}
@@ -239,21 +241,15 @@ export default function ProjectsPageClient({ initialProjects = [], categories = 
                 </motion.div>
               ))
             ) : (
-              <div className="col-span-full py-20 text-center">
-                <p className="text-gray-600 text-sm">
-                  {activeFilter === "todos"
-                    ? "Nenhum projeto disponível de momento."
-                    : `Nenhum projeto de ${activeFilter} de momento.`}
-                </p>
-                {activeFilter !== "todos" && (
-                  <button
-                    onClick={() => setActiveFilter("todos")}
-                    className="mt-3 text-xs text-yellow-400/60 hover:text-yellow-400 transition underline cursor-pointer"
-                  >
-                    Ver todos
-                  </button>
-                )}
-              </div>
+              // Empty state animado — variante corresponde ao filtro activo
+              // "todos" → animação de pasta/search (geral)
+              // "frontend" | "backend" | "fullstack" → animação específica
+              <EmptyState
+                tipo="geral"
+                mensagem={mensagemVazia}
+                onClearFilter={activeFilter !== "todos" ? () => setActiveFilter("todos") : null}
+                labelBotao="Ver todos"
+              />
             )}
           </motion.div>
         </AnimatePresence>

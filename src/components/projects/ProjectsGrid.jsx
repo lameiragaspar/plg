@@ -4,6 +4,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import FadeIn from "@/components/FadeIn";
 import ProjectCard from "@/components/projects/ProjectCard";
+import EmptyState from "@/components/projects/EmptyState";
 
 export default function ProjectsGrid({
   filteredProjects,
@@ -13,7 +14,16 @@ export default function ProjectsGrid({
   onToggleLike,
   onClearTech,
   search,
+  category = "geral",   // "Frontend" | "Backend" | "Fullstack" — vem de ProjectsLayout
 }) {
+  // Normaliza para lowercase para corresponder às chaves do EmptyState
+  const tipoEmptyState = category.toLowerCase();
+
+  // Mensagem contextual: muda quando há filtro activo
+  const mensagemVazia = activeTech
+    ? `Nenhum projeto com "${activeTech}" encontrado.`
+    : `Nenhum projeto ${category !== "geral" ? `de ${category} ` : ""}encontrado.`;
+
   return (
     <AnimatePresence mode="wait">
       <motion.section
@@ -46,22 +56,12 @@ export default function ProjectsGrid({
             </FadeIn>
           ))
         ) : (
-          // Empty state quando não há resultados
-          <div className="col-span-full py-20 text-center">
-            <p className="text-gray-600 text-sm">
-              {activeTech
-                ? `Nenhum projeto com "${activeTech}" encontrado.`
-                : "Nenhum projeto encontrado."}
-            </p>
-            {activeTech && (
-              <button
-                onClick={onClearTech}
-                className="mt-3 text-xs text-yellow-400/60 hover:text-yellow-400 transition cursor-pointer underline"
-              >
-                Ver todos
-              </button>
-            )}
-          </div>
+          <EmptyState
+            tipo={tipoEmptyState}
+            mensagem={mensagemVazia}
+            onClearFilter={activeTech ? onClearTech : null}
+            labelBotao="Ver todos"
+          />
         )}
       </motion.section>
     </AnimatePresence>
