@@ -45,9 +45,58 @@ components/
 lib/
 ├── Projects.js              # Data layer (server-only)
 ├── supabase-admin.js        # Cliente com service key
+├── supabase-server.js       # Cliente SSR (sessão via cookies) — auth admin
 ├── supabase.js              # Cliente público
+├── admin/                   # Lógica do painel admin (server-only)
+│   ├── auth.js              # requireAdmin() / getAdminUser()
+│   ├── session.js           # Server Actions de login/logout
+│   ├── queries.js           # Leituras do painel (vê drafts)
+│   ├── projects.js          # Server Actions CRUD de projectos
+│   ├── feedback.js          # Server Actions de feedback
+│   ├── messages.js          # Server Actions de mensagens
+│   └── log.js               # Auditoria (admin_activity_log)
 └── constants/               # Config estática (categories, stack, etc.)
+
+middleware.js                # Protege /admin/* (redirect p/ login)
 ```
+
+---
+
+## Painel de Administração (`/admin`)
+
+Área privada para gerir o conteúdo do portfólio, protegida por autenticação
+Supabase (email + password) e Row Level Security.
+
+```
+app/admin/
+├── login/page.js            # Formulário de login (fora do shell)
+└── (panel)/                 # Grupo protegido — AdminShell com sidebar
+    ├── layout.js            # requireAdmin() + AdminSidebar
+    ├── page.js              # Dashboard (contagens agregadas)
+    ├── projects/            # CRUD de projectos (list / new / [id])
+    ├── feedback/page.js     # Inbox de feedback
+    └── messages/page.js     # Inbox de mensagens de contacto
+```
+
+**Funcionalidades:**
+- **Autenticação** via `@supabase/ssr` com sessão em cookies; `middleware.js`
+  intercepta `/admin/*` e a função `requireAdmin()` protege Server Components e
+  Server Actions (defesa em profundidade).
+- **CRUD de projectos** com formulário único (criação/edição), gestão de
+  tecnologias por papel (front/back) e editor de endpoints.
+- **Acções rápidas**: mudar estado (rascunho/publicado/arquivado), destaque,
+  marcar feedback/mensagens como lido/respondido, eliminar.
+- **Auditoria**: cada acção fica registada em `admin_activity_log`.
+- `revalidatePath` actualiza as páginas públicas após cada alteração.
+
+### Setup do admin
+
+1. **Criar o utilizador admin** no dashboard do Supabase: *Authentication →
+   Users → Add user* (email + password, com email confirmado).
+2. **Aplicar a migração** `supabase/migrations/20260630_admin_panel.sql` no
+   SQL Editor do Supabase (enums, `is_read`, trigger `updated_at`,
+   `admin_activity_log`, índices, RLS e correcção de `project_technologies.role`).
+3. Aceder a `/admin/login` e iniciar sessão.
 
 ---
 
